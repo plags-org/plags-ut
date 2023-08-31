@@ -1,0 +1,329 @@
+{% extends 'base.html' %}
+{% load tz %}
+
+{% block title %}Bulk Review Submission - [{{ exercise_info.setting.name }}]{% endblock %}
+
+{% block content %}
+{% include "meta_parts/diagram.html" %}
+
+<h2>Submission Information</h2>
+
+<style>
+.submission_bulk_review {
+}
+.submission_bulk_review_tools_header {
+    width: 100%;
+}
+.submission_bulk_review_columns {
+    display: flex;
+    max-height: calc(100vh - 400px);
+}
+.submission_bulk_review_sidebar {
+    flex: 0 0 208px;
+    overflow-y: scroll;
+}
+.submission_bulk_review_main {
+    flex-grow: 1;
+    margin: 0px 0px 0px 16px;
+    overflow-y: scroll;
+}
+.submission_bulk_review_sidebar_card {
+    cursor: pointer;
+}
+.submission_bulk_review_main_view {
+}
+</style>
+<script>
+function updateSubmissionCardStatus (submissionId, status) {
+    function getStyleDisplay (flag) {
+        return flag ? "inline" : "none";
+    }
+    document.getElementById(`id_submission_bulk_review_sidebar_status_confirmed__for_submission_${submissionId}`).style.display = getStyleDisplay(status.isConfirmed);
+    document.getElementById(`id_submission_bulk_review_sidebar_status_edit_unsaved__for_submission_${submissionId}`).style.display = getStyleDisplay(status.isEditUnsaved);
+    document.getElementById(`id_submission_bulk_review_sidebar_status_newly_confirmed__for_submission_${submissionId}`).style.display = getStyleDisplay(status.isNewlyConfirmed);
+    document.getElementById(`id_submission_bulk_review_sidebar_status_untouched__for_submission_${submissionId}`).style.display = getStyleDisplay(
+        !(status.isConfirmed || status.isEditUnsaved || status.isNewlyConfirmed)
+    );
+    var sidebarCardClassList = document.getElementById(`id_submission_bulk_review_sidebar_card__for_submission_${submissionId}`).classList;
+    if (status.isEditUnsaved) {
+        sidebarCardClassList.add('status_border_edited');
+        sidebarCardClassList.remove('status_border_default');
+    } else {
+        sidebarCardClassList.add('status_border_default');
+        sidebarCardClassList.remove('status_border_edited');
+    }
+}
+function updateSubmissionReviewStatus (submissionId, status) {
+    var sidebarCardClassList = document.getElementById(`id_submission_bulk_review_main__for_submission_${submissionId}`).classList;
+    if (status.isEditUnsaved) {
+        sidebarCardClassList.add('status_border_edited');
+        sidebarCardClassList.remove('status_border_default');
+    } else {
+        sidebarCardClassList.add('status_border_default');
+        sidebarCardClassList.remove('status_border_edited');
+    }
+}
+// SubmissionId: {is_confirmed: bool, ...}
+var _INITIAL_SUBMISSION_REVIEW_STORAGE = {};
+function setInitialSubmissionReview (submissionId) {
+    _INITIAL_SUBMISSION_REVIEW_STORAGE[submissionId] = getCurrentSubmissionReview(submissionId);
+}
+function getInitialSubmissionReview (submissionId) {
+    return _INITIAL_SUBMISSION_REVIEW_STORAGE[submissionId];
+}
+function getCurrentSubmissionReview (submissionId) {
+    var is_confirmed = document.getElementById(`id_is_confirmed__for_submission_${submissionId}`).checked;
+    var reviewer_remarks = document.getElementById(`id_reviewer_remarks__for_submission_${submissionId}`).value;
+    var review_grade = document.getElementById(`id_review_grade__for_submission_${submissionId}`).value;
+    var review_comment = document.getElementById(`id_review_comment__for_submission_${submissionId}`).value;
+    return {
+        is_confirmed,
+        reviewer_remarks,
+        review_grade,
+        review_comment,
+    }
+}
+function getSubmissionReview (submissionId) {
+    var current = getCurrentSubmissionReview(submissionId);
+    var is_confirmed = current.is_confirmed;
+    var reviewer_remarks = current.reviewer_remarks;
+    var review_grade = current.review_grade;
+    var review_comment = current.review_comment;
+    var initial = getInitialSubmissionReview(submissionId);
+    var original_is_confirmed = initial.is_confirmed;
+    var original_reviewer_remarks = initial.reviewer_remarks;
+    var original_review_grade = initial.review_grade;
+    var original_review_comment = initial.review_comment;
+    var changes = [
+        [is_confirmed, original_is_confirmed],
+        [reviewer_remarks, original_reviewer_remarks],
+        [review_grade, original_review_grade],
+        [review_comment, original_review_comment],
+    ];
+    // console.log(changes);
+    var isEditUnsaved = changes.some(function (v) { return v[0] !== v[1]; });
+    var isNewlyConfirmed = (!original_is_confirmed) && is_confirmed;
+    return {
+        data: {
+            is_confirmed,
+            reviewer_remarks,
+            review_grade,
+            review_comment,
+        },
+        original: {
+            original_is_confirmed,
+            original_reviewer_remarks,
+            original_review_grade,
+            original_review_comment,
+        },
+        status: {
+            isEditUnsaved,
+            isNewlyConfirmed,
+            isConfirmed: original_is_confirmed,
+        },
+    };
+}
+function updateSubmissionReviewPreview (submissionId) {
+    var review = getSubmissionReview(submissionId)
+
+    document.getElementById(`id_submission_bulk_review_main_review_preview_confirmed_grade__for_submission_${submissionId}`).innerText = review.data.review_grade;
+    var commentElm = document.getElementById(`id_submission_bulk_review_main_review_preview_confirmed_comment__for_submission_${submissionId}`);
+    commentElm.innerHTML = markdown_plus_to_html(review.data.review_comment);
+    reflect_markdown_plus_designs(commentElm);
+
+    updateSubmissionCardStatus(submissionId, review.status);
+    updateSubmissionReviewStatus(submissionId, review.status);
+}
+function scrollMainToSubmission (submissionId) {
+    var submissionElementId = `id_submission_bulk_review_main__for_submission_${submissionId}`;
+    // var top = document.getElementById(submissionElementId).offsetTop; //Getting Y of target element
+    // window.scrollTo(0, top);                        //Go there directly or some transition
+    document.getElementById(submissionElementId).scrollIntoView();
+    document.querySelectorAll('.submission_bulk_review_sidebar_card').forEach((e) => e.classList.remove('status_border_selected'));
+    document.getElementById(`id_submission_bulk_review_sidebar_card__for_submission_${submissionId}`).classList.add('status_border_selected');
+}
+function saveBulkReview () {
+    var numSubmission = {{ submissions|length }};
+    var submissionIdList = {{ submission_id_list|json_encode }};
+
+    var submission_reviews = [];
+    var submissionNumber = 0;
+    for (; submissionNumber < numSubmission; ++submissionNumber) {
+        var submissionId = submissionIdList[submissionNumber];
+        var submission_review = getSubmissionReview(submissionId);
+        var review_grade = null;
+        if (submission_review.data.review_grade) {
+            review_grade = parseInt(submission_review.data.review_grade);
+        }
+        submission_reviews.push({
+            id: parseInt(document.getElementById(`id_submission_bulk_review_main__for_submission_${submissionId}`).dataset.submissionId),
+            is_confirmed: submission_review.data.is_confirmed,
+            review_grade: review_grade,
+            review_comment: submission_review.data.review_comment,
+            reviewer_remarks: submission_review.data.reviewer_remarks,
+        });
+    }
+    // console.log(submission_reviews);
+
+    if (!confirm('Save reviews ? (operation takes some time)')) return;
+    addInfoMessage('Saving reviews ... (operation takes some time)');
+    var btn = document.getElementById('id_save_bulk_review_button');
+    btn.disabled = true;
+    callAPI('{{ "/api/v0/o/{o_name}/c/{c_name}/submission/bulk_review/"|apply_o_name_to_url:organization|apply_c_name_to_url:course }}', {
+        submission_reviews,
+    }, function (response) {
+        btn.disabled = false;
+        console.dir(response);
+        if (response.ok) {
+            const data = response.data;
+            addInfoMessage(`Save reviews successful: (updated, untouched) = (${data.num_updated}, ${data.num_untouched})`);
+            if (confirm('Save reviews successful. Refresh view?')) location.reload();
+        } else {
+            addErrorMessage(buildErrorMessage('Failed to confirm', response.errors));
+        }
+    }, function () {
+        btn.disabled = false;
+    });
+}
+
+$(function () {
+    scrollMainToSubmission({{ submissions.0.id }});
+});
+
+</script>
+<div class="submission_bulk_review">
+    {% restrict user_authority can_review_submission %}
+    <div class="submission_bulk_review_tools_header">
+        <button type="button" id="id_save_bulk_review_button" name="bulk_review" class="significant_button" onclick="saveBulkReview()">SAVE ALL REVIEWS</button>
+        <hr />
+
+    </div>
+
+    <div class="submission_bulk_review_columns">
+        <div class="submission_bulk_review_sidebar">
+            {% for submission in submissions %}
+
+{% comment %} {% include "meta_parts/submission_evaluation_review_status.html" %} {% endcomment %}
+<div
+        id="id_submission_bulk_review_sidebar_card__for_submission_{{ submission.id }}"
+        class="submission_bulk_review_sidebar_card status_border"
+        onclick="scrollMainToSubmission({{ submission.id }})"
+>
+    <p style="margin-bottom: 0.5rem;">Submission #{{ forloop.counter }}</p>
+    Status:<span class="submission_bulk_review_sidebar_status">
+        <span id="id_submission_bulk_review_sidebar_status_confirmed__for_submission_{{ submission.id }}"
+                style="margin-left: 8px; display: none;" data-bs-toggle="tooltip" data-bs-placement="top"
+                title="Confirmed"
+        ><i class="fas fa-flag-checkered"></i></span>
+        <span id="id_submission_bulk_review_sidebar_status_edit_unsaved__for_submission_{{ submission.id }}"
+                style="margin-left: 8px; display: none;" data-bs-toggle="tooltip" data-bs-placement="top"
+                title="Edit unsaved"
+        ><i class="fas fa-pen-alt"></i></span>
+        <span id="id_submission_bulk_review_sidebar_status_newly_confirmed__for_submission_{{ submission.id }}"
+                style="margin-left: 8px; display: none;" data-bs-toggle="tooltip" data-bs-placement="top"
+                title="Newly Confirmed"
+        ><i class="fas fa-check-circle"></i></span>
+        <span id="id_submission_bulk_review_sidebar_status_untouched__for_submission_{{ submission.id }}"
+                style="margin-left: 8px; display: none;"
+        >Untouched</span>
+    </span>
+</div>
+{% comment %} {% include "meta_parts/submission_evaluation_review_status.html" %} {% endcomment %}
+
+            {% endfor %}
+        </div>
+        <div class="submission_bulk_review_main">
+            {% for submission, review_form in submission_review_forms %}
+
+{% comment %} {% include "meta_parts/submission_evaluation_review_main.html" %} {% endcomment %}
+<div id="id_submission_bulk_review_main__for_submission_{{ submission.id }}"
+    class="submission_bulk_review_main_view status_border"
+    data-submission-number="{{ forloop.counter }}" data-submission-id="{{ submission.id }}">
+
+<h2>
+<a href="{% url 'submission/view' o_name=organization.name c_name=course.name s_eb64=course|encode_submission_id:submission.id %}">Submission #{{ forloop.counter }}</a>
+</h2>
+
+<table class="data_list"><tbody>
+    <tr>
+        <td><span data-bs-toggle="tooltip" data-bs-placement="top"
+                title="Submitted at">
+            <i class="fas fa-clock"></i> {{ submission.submitted_at|date:'Y-m-d H:i:s' }}
+        </span></td>
+        <td><span data-bs-toggle="tooltip" data-bs-placement="top"
+                title="Submitted by"><i class="fas fa-user-circle">
+            </i> {{ submission.submitted_by.username }}
+        </span></td>
+    </tr>
+</tbody></table>
+
+{% include "meta_parts/submission_format_file.html" %}
+{% comment %} {% include "meta_parts/exercise_info_detail_summary.html" with without_trial_link=True %} {% endcomment %}
+
+{% if submission.is_autograded_exercise %}
+<hr />
+<h3>Evaluation</h3>
+{% comment %} トライアル提出の可否判定 {% endcomment %}
+{% comment %} NOTE 一括レビューではトライアルリンクを表示しない {% endcomment %}
+{% comment %} {% if exercise_info.setting|is_trial_on_exercise_allowed:user_authority %} {% endcomment %}
+{% comment %} <a class="inline_link" href="{% url 'exercise/view' o_name=organization.name c_name=course.name e_name=exercise_info.setting.name %}">Trial</a> {% endcomment %}
+{% comment %} {% endif %} {% endcomment %}
+
+{% if submission.evaluated_at %}
+{% include 'meta_parts/evaluation_result.html' with evaluation_result=submission.evaluation_result_json|json_load is_state_case_detail_viewable=is_reviewer is_state_case_detail_viewable_v2=True %}
+{% else %}
+<h3>Currently unavailable</h3>
+{% endif %}
+{% endif %}
+
+<hr />
+<h3>Review</h3>
+{% if submission.submission_type == 10 %}
+{% comment %} {% include "meta_parts/lecturer_grade_comment.html" %} {% endcomment %}
+{% comment %} live review preview {% endcomment %}
+<span>Live preview (NOTE: "Confirmed" condition is ignored for this):</span>
+<div style="border: double 4px #000; border-radius: 8px">
+    <table class="data_list" style="margin: 4px">
+        <tr>
+            <th>Score</th>
+            <td><span id="id_submission_bulk_review_main_review_preview_confirmed_grade__for_submission_{{ submission.id }}"></span></td>
+        </tr>
+    </table>
+    <div id="id_submission_bulk_review_main_review_preview_confirmed_comment__for_submission_{{ submission.id }}" class="static_markdown_content" style="margin: 4px"></div>
+</div>
+{% comment %} {% include "meta_parts/lecturer_grade_comment.html" %} {% endcomment %}
+
+<hr />
+{% include "meta_parts/submission_review_metadata.html" with submission=submission without_confirm_description_message=True %}
+
+<form method="post">
+    {% csrf_token %}
+    <table>{{ review_form.as_table }}</table>
+
+    {% comment %} NOTE 個別の保存ボタンは一旦なしで進める {% endcomment %}
+    {% comment %} <button type="submit" onclick="submitReview({{ submission.id }})">Save this review</button> {% endcomment %}
+    <script>
+        $(function () {
+            {% comment %} 「編集されているか」の判定のため、元の値を保持しておく {% endcomment %}
+            setInitialSubmissionReview({{ submission.id }});
+
+            {% comment %} プレビュー表示を更新する {% endcomment %}
+            updateSubmissionReviewPreview({{ submission.id }});
+        });
+    </script>
+</form>
+{% else %}
+No comments for trial submissions.
+{% endif %}
+</div>
+{% comment %} {% include "meta_parts/submission_evaluation_review_main.html" %} {% endcomment %}
+
+            {% endfor %}
+            {% include 'meta_parts/evaluation_result_compatibility/add_evaluation_toggle_handler.html' %}
+            <p style="height: calc(100vh - 432px);">End of bulk review.</p>
+        </div>
+    </div>
+    {% endrestrict %}
+</div>
+
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Submission Log - [{{ organization.name }} / {{ course.title }}]{% endblock %}
+
+{% block content %}
+{% include "meta_parts/diagram.html" %}
+
+<h2>Submission Log</h2>
+{% include "meta_parts/submission_parcel_list.html" with submission_parcels=submission_parcel|to_one_element_list without_view=True %}
+
+<hr />
+<h2>Breakdown</h2>
+{% include "meta_parts/submission_evaluation_list.html" with without_log=True with_wj_progress=True %}
+
+<hr />
+<h2>Preview</h2>
+<div id="view_submission_parcel__{{ sp_eb64 }}__preview" class="jupyter_notebook">Loading ...</div>
+<script>
+$(function () {
+    callAPI('{{ "/api/v0/o/{o_name}/c/{c_name}/submission_parcel/get/"|apply_o_name_to_url:organization|apply_c_name_to_url:course }}', {
+        id: {{ submission_parcel.id }},
+    }, function (response) {
+        console.dir(response);
+        if (response.ok) {
+            const data = response.data;
+            var notebookJson = JSON.parse(data.submission_parcel_file.content);
+            var targetId = "view_submission_parcel__{{ sp_eb64 }}__preview";
+            var targetElm = document.getElementById(targetId);
+            var nbv = nbv_constructor(document, {
+                katex: window.katex,
+                prism: window.Prism,
+                marked: window.marked,
+            });
+            nbv.render(notebookJson, targetElm);
+        } else {
+            addErrorMessage(buildErrorMessage('Failed to get preview', response.errors));
+        }
+    });
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Create User{% endblock %}
+
+{% block content %}
+{% if organization %}
+<h2>Create User on organization [{{ organization.name }}]</h2>
+{% else %}
+<h2>Create User</h2>
+{% endif %}
+
+<p><strong>ATTENTION:</strong> This form is ONLY for creating the accounts of lecturers.</p>
+
+<hr />
+<form method="post">
+    {% csrf_token %}
+    <h3>New user</h3>
+    <table class="table_form">
+        <colgroup>
+            <col span="1" style="width: 20%;">
+            <col span="1" style="width: 80%;">
+        </colgroup>
+        {{ form.as_table }}
+    </table>
+    <button type="submit" class="btn btn-primary">Create</button>
+</form>
+
+{% endblock %}

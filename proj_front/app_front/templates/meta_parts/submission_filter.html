@@ -1,0 +1,78 @@
+{% comment %} NOTE ユーザーは applyFilter 関数を実装すること {% endcomment %}
+
+{% comment %} TODO feature_advanced_submission_filter とかのユーザー設定を作ってそれによって出し分ける {% endcomment %}
+<div style="display:flex">
+    <div class="dropdown">
+        <button type="button" class="btn btn-secondary dropdown-toggle" style="border-radius: 4px 0 0 4px;" data-bs-toggle="dropdown" aria-expanded="false">
+            Filters
+        </button>
+        <ul class="dropdown-menu">
+            {% if user_authority.on_organization.is_manager %}
+            <li>
+            {% restrict user_authority on_organization.is_manager %}
+                <button type="button" class="dropdown-item" onclick="addFilterCondition(event)" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-html="true" title="{{ "{10} | {20} ; // normal, trial (respectively)"|escape_submission_filter_help_tooltip_html }}">type</button>
+            {% endrestrict %}
+            </li>
+            {% endif %}
+            <li><button type="button" class="dropdown-item" onclick="addFilterCondition(event)" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-html="true" title="{{ "{AS} | {FE} | {A} | {WJ}"|escape_submission_filter_help_tooltip_html }}">status</button></li>
+            <li><button type="button" class="dropdown-item" onclick="addFilterCondition(event)" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-html="true" title="{{ "{<tag code>}  {,} {...} ; // comma-separated tag codes (OR-match)"|escape_submission_filter_help_tooltip_html }}">tag</button></li>
+            <li><button type="button" class="dropdown-item" onclick="addFilterCondition(event)" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-html="true" title="{{ "{<integer>} | {(null)}"|escape_submission_filter_help_tooltip_html }}">score</button></li>
+            <li><button type="button" class="dropdown-item" onclick="addFilterCondition(event)" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-html="true" title="{{ "{<username>} | {(self)} | {(student)} | {(non-student)} | {(current-student)}"|escape_submission_filter_help_tooltip_html }}">submitted_by</button></li>
+            <li><button type="button" class="dropdown-item" onclick="addFilterCondition(event)" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-html="true" title="{{ "{<exercise_name>} | {<exercise_name>$} ; // prefix match, exact match (respectively)"|escape_submission_filter_help_tooltip_html }}">exercise</button></li>
+            <li><button type="button" class="dropdown-item" onclick="addFilterCondition(event)" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-html="true" title="{{ "{true} | {false} | {1} | {0}"|escape_submission_filter_help_tooltip_html }}">latest</button></li>
+            <li><button type="button" class="dropdown-item" onclick="addFilterCondition(event)" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-html="true" title="{{ "{true} | {false} | {1} | {0}"|escape_submission_filter_help_tooltip_html }}">delayed</button></li>
+            <li><button type="button" class="dropdown-item" onclick="addFilterCondition(event)" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-html="true" title="{{ "{<string>} | {<double-quoted string>} ; // substring match"|escape_submission_filter_help_tooltip_html }}">comment</button></li>
+            <li><button type="button" class="dropdown-item" onclick="addFilterCondition(event)" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-html="true" title="{{ "{true} | {false} | {1} | {0}"|escape_submission_filter_help_tooltip_html }}">commented</button></li>
+            <li><button type="button" class="dropdown-item" onclick="addFilterCondition(event)" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-html="true" title="{{ "{<username>} | {(any)} | {(none)}"|escape_submission_filter_help_tooltip_html }}">commented_by</button></li>
+            <li><button type="button" class="dropdown-item" onclick="addFilterCondition(event)" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-html="true" title="{{ "{<string>} | {<double-quoted string>} ; // substring match"|escape_submission_filter_help_tooltip_html }}">remarks</button></li>
+            <li><button type="button" class="dropdown-item" onclick="addFilterCondition(event)" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-html="true" title="{{ "{<username>} | {(any)} | {(none)}"|escape_submission_filter_help_tooltip_html }}">remarked_by</button></li>
+            <li><button type="button" class="dropdown-item" onclick="addFilterCondition(event)" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-html="true" title="{{ "{true} | {false} | {1} | {0}"|escape_submission_filter_help_tooltip_html }}">confirmed</button></li>
+            <li><button type="button" class="dropdown-item" onclick="addFilterCondition(event)" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-html="true" title="{{ "{<username>}"|escape_submission_filter_help_tooltip_html }}">confirmed_by</button></li>
+            <li><button type="button" class="dropdown-item" onclick="addFilterCondition(event)" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-html="true" title="{{ "{true} | {false} | {1} | {0}"|escape_submission_filter_help_tooltip_html }}">rejudged</button></li>
+            <li><button type="button" class="dropdown-item" onclick="addFilterCondition(event)" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-html="true" title="{{ "{<username>}"|escape_submission_filter_help_tooltip_html }}">rejudged_by</button></li>
+            <li><button type="button" class="dropdown-item" onclick="addFilterCondition(event)" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-html="true" title="{{ "{<unsigned integer>}"|escape_submission_filter_help_tooltip_html }}">limit</button></li>
+            <li><button type="button" class="dropdown-item" onclick="addFilterCondition(event)" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-html="true" title="{{ "{<YYYY>-<MM>-<DD>(T<hh>(:<mm>(:<ss>)?)?)?} ; // inclusive"|escape_submission_filter_help_tooltip_html }}">since</button></li>
+            <li><button type="button" class="dropdown-item" onclick="addFilterCondition(event)" data-bs-toggle="tooltip" data-bs-placement="right" data-bs-html="true" title="{{ "{<YYYY>-<MM>-<DD>(T<hh>(:<mm>(:<ss>)?)?)?} ; // exclusive"|escape_submission_filter_help_tooltip_html }}">until</button></li>
+        </ul>
+    </div>
+    <input id="id_submission_filter_input" value="" style="background-color: #fafafa; padding: 4px; flex-grow: 1" />
+    <button type="button" name="apply_filter" class="btn btn-primary" style="border-radius: 0 4px 4px 0;" onclick="applyFilter()">APPLY</button>
+    {% comment %} <span data-bs-toggle="tooltip" data-bs-placement="top" title="TODO 未実装"><i class="fas fa-dizzy"></i></span> {% endcomment %}
+    {% comment %} TODO: Richer UI {% endcomment %}
+</div>
+
+<script>
+function addFilterCondition(event) {
+    const filterName = event.target.innerText;
+    const el = $("#id_submission_filter_input");
+    const currentFilter = el.val();
+    // TODO ちゃんとパースする 今はワンチャン動く程度
+    const filterKeyColon = `${filterName}:`;
+    const currentFilterIndex = currentFilter.indexOf(filterKeyColon);
+    if (currentFilterIndex === -1) {
+        const newFilter = currentFilter + " " + filterKeyColon;
+        el.val(newFilter);
+        el.focus();
+    } else {
+        el.focus();
+        const selectionStart = currentFilterIndex + filterKeyColon.length;
+        el[0].selectionStart = selectionStart
+        const valueEnd = currentFilter.substring(selectionStart).indexOf(" ");
+        const selectionEnd = valueEnd === -1 ? currentFilter.length : selectionStart + valueEnd;
+        el[0].selectionEnd = selectionEnd;
+    }
+}
+
+function getSubmissionFilterQueryFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const filterExpr = decodeURIComponent(urlParams.get("q") || "");
+    return filterExpr;
+}
+document.addEventListener('DOMContentLoaded', function () {
+    {% comment %} TODO ここでURLをパースしてフィルターUIにデータを流し込む {% endcomment %}
+    $("#id_submission_filter_input").val(getSubmissionFilterQueryFromURL());
+    $("#id_submission_filter_input").on('keydown', function (e) {
+        if (e.key === 'Enter' || e.keyCode === 13) applyFilter();
+    });
+});
+</script>

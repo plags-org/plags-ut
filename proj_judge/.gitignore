@@ -1,0 +1,12 @@
+.venv
+__pycache__
+
+db.sqlite3
+
+external_data/
+
+__debug__*
+
+-internal/
+
+sandbox

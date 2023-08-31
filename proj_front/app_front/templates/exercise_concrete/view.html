@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block title %}ExerciseConcrete - [{{ exercise_concrete.name }}]{% endblock %}
+
+{% block content %}
+
+<h4>
+    [<a href={% url 'organization/top' o_name=organization.name %}>{{ organization.name }}</a>]
+</h4>
+
+{% include 'meta_parts/meta_ce_concrete_view.html' with meta_ce_type='exercise' meta_ce_info=exercise_info %}
+
+{% endblock %}

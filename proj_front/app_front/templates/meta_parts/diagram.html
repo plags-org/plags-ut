@@ -1,0 +1,83 @@
+{# param: user_organization_authority #}
+{# param: user_organizations #}
+{# param: user_course_authority #}
+{# param: user_courses #}
+
+{# TODO implementation #}
+
+{# -- ORGANIZATION LEVEL -- ORGANIZATION LEVEL -- ORGANIZATION LEVEL -- ORGANIZATION LEVEL -- #}
+{% if organization %}
+<h4>
+{% restrict user_authority is_superuser %}
+    [<a href={% url 'organization/list' %}>Organization List</a>]
+&gt;
+{% endrestrict %}
+{% if user_authority.on_organization.is_gt_readonly %}
+    [<a href={% url 'organization/top' o_name=organization.name %}>Top ({{ organization.name }})</a>]
+{% if course %}
+{% if user_authority.on_course.is_gt_readonly %}
+&gt;
+{% endif %}
+{% endif %}
+{% endif %}
+
+{# -- COURSE LEVEL -- COURSE LEVEL -- COURSE LEVEL -- COURSE LEVEL -- #}
+{% if course %}
+{% if user_authority.on_course.is_gt_readonly %}
+    [<a href={% url 'course/top' o_name=organization.name c_name=course.name %}>Top ({{ course.title }})</a>]
+
+{# -- EXERCISE LEVEL -- EXERCISE LEVEL -- EXERCISE LEVEL -- EXERCISE LEVEL -- #}
+{% comment %} TODO もう少しなんとかならねぇかなぁ {% endcomment %}
+{% if exercise %}
+&gt;
+    {% if user_authority.can_list_submission %}
+    {% with is_latest=user_authority.can_review_submission %}
+    [<a href="{% url 'submission/list' o_name=organization.name c_name=course.name %}?{{ exercise|build_submission_query_filter_by_exercise:is_latest|to_submission_filter_query_url_param }}">{{ exercise.name }}</a>]
+    {% endwith %}
+    {% endif %}
+{% elif exercise_info %}
+&gt;
+    {% if user_authority.can_list_submission %}
+    {% with is_latest=user_authority.can_review_submission %}
+    [<a href="{% url 'submission/list' o_name=organization.name c_name=course.name %}?{{ exercise_info.setting|build_submission_query_filter_by_exercise:is_latest|to_submission_filter_query_url_param }}">{{ exercise_info.setting.name }}</a>]
+    {% endwith %}
+    {% endif %}
+{% endif %}
+{# -- EXERCISE LEVEL -- EXERCISE LEVEL -- EXERCISE LEVEL -- EXERCISE LEVEL -- #}
+
+{# -- SUBMISSION_PARCEL LEVEL -- SUBMISSION_PARCEL LEVEL -- SUBMISSION_PARCEL LEVEL -- SUBMISSION_PARCEL LEVEL -- #}
+{% if submission_parcel or submission %}
+|| Submission
+{% endif %}
+
+{% if submission_parcel %}
+    [<a href="{% url 'submission_parcel/list' o_name=organization.name c_name=course.name %}">All Logs</a>]
+
+{% endif %}
+{# -- SUBMISSION_PARCEL LEVEL -- SUBMISSION_PARCEL LEVEL -- SUBMISSION_PARCEL LEVEL -- SUBMISSION_PARCEL LEVEL -- #}
+
+{# -- SUBMISSION LEVEL -- SUBMISSION LEVEL -- SUBMISSION LEVEL -- SUBMISSION LEVEL -- #}
+{% if submission %}
+{% if submission_parcel %}
+&gt;
+    [<a href="{% url 'submission_parcel/view' o_name=organization.name c_name=course.name sp_eb64=course|encode_submission_parcel_id:submission_parcel.id %}">Log</a>]
+{% endif %}
+
+{# -- EVALUATION LEVEL -- EVALUATION LEVEL -- EVALUATION LEVEL -- EVALUATION LEVEL -- #}
+{% if evaluation %}
+&gt;
+    [<a href="{% url 'submission/view' o_name=organization.name c_name=course.name s_eb64=course|encode_submission_id:submission.id %}">Evaluations</a>]
+{% endif %}
+{# -- EVALUATION LEVEL -- EVALUATION LEVEL -- EVALUATION LEVEL -- EVALUATION LEVEL -- #}
+
+{% endif %}
+{# -- SUBMISSION LEVEL -- SUBMISSION LEVEL -- SUBMISSION LEVEL -- SUBMISSION LEVEL -- #}
+
+{% endif %}
+{% endif %}
+{# -- COURSE LEVEL -- COURSE LEVEL -- COURSE LEVEL -- COURSE LEVEL -- #}
+
+</h4>
+<hr />
+{% endif %}
+{# -- ORGANIZATION LEVEL -- ORGANIZATION LEVEL -- ORGANIZATION LEVEL -- ORGANIZATION LEVEL -- #}

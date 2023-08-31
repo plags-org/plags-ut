@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Course - [{{ organization.name }} / {{ course.title }}]{% endblock %}
+
+{% block content %}
+{% include "meta_parts/diagram.html" %}
+
+<h2>Create course in [{{ organization.name }}]</h2>
+<form method="post">
+    {% csrf_token %}
+    <table class="table_form">
+        {{ form.as_table }}
+    </table>
+    <button type="submit" class="btn btn-primary">Create</button>
+</form>
+
+<script>
+var stateIsTitleModified = false;
+function getDefaultCourseTitle () {
+    return "{{ organization.name }} / " + $("#id_name").val();
+}
+$("#id_name").keyup(function () {
+    if (stateIsTitleModified) return;
+    $("#id_title").val(getDefaultCourseTitle());
+});
+$("#id_title").keyup(function () {
+    if (stateIsTitleModified) {
+        if ($("#id_title").val() === "") stateIsTitleModified = false;
+        return;
+    }
+    if ($("#id_title").val() !== getDefaultCourseTitle()) {
+        stateIsTitleModified = true;
+    }
+});
+</script>
+
+{% endblock %}

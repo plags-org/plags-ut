@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% include "meta_parts/diagram.html" %}
+
+<hr />
+<h2>Submissions on Course [{{ course.title }}], [{{ organization.name }}]</h2>
+
+{% restrict user_authority can_review_submission %}
+<hr />
+{% include "meta_parts/submission_filter.html" %}
+
+<hr />
+<div style="display: flex; align-items: center;">
+{% restrict user_authority can_review_submission %}
+<button type="button" id="id_bulk_confirm_button" name="bulk_review" class="significant_button" onclick="bulkReview()">BULK REVIEW</button>
+<span style="margin-right: 32px;" data-bs-toggle="tooltip" data-bs-placement="top"
+        title="Review submissions shown in the following list. Max &#035;submissions is 50 so that you may need to add &quot;limit:50&quot; to filter."
+><i class="fas fa-question-circle"></i></span>
+{% endrestrict %}
+{% restrict user_authority can_confirm_submission %}
+<button type="button" id="id_bulk_confirm_button" name="bulk_confirm" class="significant_button" onclick="bulkConfirm()">BULK CONFIRM</button>
+<span style="margin-right: 32px;" data-bs-toggle="tooltip" data-bs-placement="top"
+        title="Confirm submissions shown in the following list. Note that when the list is truncated (by limit), confirmation will never be performed for truncated submissions. Add &quot;confirmed:false&quot; condition to confirm all iteratively."
+><i class="fas fa-question-circle"></i></span>
+{% endrestrict %}
+{% restrict user_authority can_create_exercise %}
+<button type="button" id="id_bulk_rejudge_button" name="bulk_rejudge" class="significant_button" onclick="bulkRejudge()">BULK REJUDGE</button>
+<span style="margin-right: 32px;" data-bs-toggle="tooltip" data-bs-placement="top"
+        title="Rejudge submissions shown in the following list. Note that when the list is truncated (by limit), rejudge will never be performed for truncated submissions. Add &quot;within:[*,<datetime just before you started rejudge>) latest:true&quot; condition to confirm all iteratively."
+><i class="fas fa-question-circle"></i></span>
+{% endrestrict %}
+
+{% restrict user_authority can_confirm_submission %}
+<a style="float: right;" href="#" class="inline_link" id="id_move_to_export_page">List to export</a>
+{% endrestrict %}
+</div>
+
+<script>
+function applyFilter() {
+    try {
+        var queryParts = [];
+        queryParts.push("q=" + encodeURIComponent($("#id_submission_filter_input").val()));
+        location.assign(location.pathname + '?' + queryParts.join('&'));
+    } catch (e) {
+        console.error(e);
+        alert(`Error: ${e}`);
+    }
+}
+
+function setMoveToExportPageURL () {
+    const query = getSubmissionFilterQueryFromURL();
+
+    var queryParts = [];
+    queryParts.push("q=" + encodeURIComponent(query));
+
+    const exportPageURL = "{% url 'submission/list_export' o_name=organization.name c_name=course.name %}";
+    document.getElementById("id_move_to_export_page").href = exportPageURL + '?' + queryParts.join('&');
+}
+document.addEventListener('DOMContentLoaded', setMoveToExportPageURL);
+
+function bulkReview () {
+    var submission_ids = {{ submission_ids }};
+    if (!submission_ids.length) {
+        alert('No submissions to review.');
+        return;
+    }
+    var max_bulk_review_num_submission = 50;
+    if (submission_ids.length > max_bulk_review_num_submission) {
+        alert(`Too many submissions specified for bulk review. Max submissions: ${max_bulk_review_num_submission} (current: ${submission_ids.length}). Add "confirmed:false limit:${max_bulk_review_num_submission}" to query.`);
+        return;
+    }
+    if (!confirm('Perform bulk review ?')) return;
+    var submissionIdsQuery = submission_ids.map(v => v.toString()).join(',')
+    var bulkReviewLocation = '{{ "/bulk_review/o/{o_name}/c/{c_name}/submission/"|apply_o_name_to_url:organization|apply_c_name_to_url:course }}';
+    var bulkReviewUrl = bulkReviewLocation + '?ids=' + submissionIdsQuery;
+    window.open(bulkReviewUrl, '_blank').focus();
+}
+function bulkConfirm () {
+    var submission_ids = {{ submission_ids }};
+    if (!submission_ids.length) {
+        alert('No submissions to confirm.');
+        return;
+    }
+    if (!confirm('Perform bulk confirmation ? (operation takes some time)')) return;
+    addInfoMessage('Executing bulk confirm ... (operation takes some time)');
+    var btn = document.getElementById('id_bulk_confirm_button');
+    btn.disabled = true;
+    callAPI('{{ "/api/v0/o/{o_name}/c/{c_name}/submission/bulk_confirm/"|apply_o_name_to_url:organization|apply_c_name_to_url:course }}', {
+        submission_ids: submission_ids,
+    }, function (response) {
+        btn.disabled = false;
+        console.dir(response);
+        if (response.ok) {
+            const data = response.data;
+            addInfoMessage(`Bulk confirm successful: (updated, untouched) = (${data.num_updated}, ${data.num_untouched})`);
+            if (confirm('Bulk confirm successful. Refresh submission list?')) applyFilter();
+        } else {
+            addErrorMessage(buildErrorMessage('Failed to confirm', response.errors));
+        }
+    }, function () {
+        btn.disabled = false;
+    });
+}
+function bulkRejudge () {
+    var submission_ids = {{ submission_ids }};
+    if (!submission_ids.length) {
+        alert('No submissions to rejudge.');
+        return;
+    }
+    if (!confirm('Perform bulk rejudge ? (operation takes some time)')) return;
+    addInfoMessage('Executing bulk rejudge ... (operation takes some time)');
+    var btn = document.getElementById('id_bulk_rejudge_button');
+    btn.disabled = true;
+    callAPI('{{ "/api/v0/o/{o_name}/c/{c_name}/submission/bulk_rejudge/"|apply_o_name_to_url:organization|apply_c_name_to_url:course }}', {
+        submission_ids: submission_ids,
+    }, function (response) {
+        btn.disabled = false;
+        console.dir(response);
+        if (response.ok) {
+            const data = response.data;
+            if (data.rejudge_errors.length) {
+                addWarningMessage(JSON.stringify(data.rejudge_errors));
+                addWarningMessage(`Rejudge status: ${data.num_rejudged} successfully enqueued, ${data.num_error} failed.`);
+                return;
+            }
+            addInfoMessage(`Bulk rejudge successful: (rejudged) = (${data.num_rejudged})`);
+            if (confirm('Bulk rejudge successful. Refresh submission list?')) applyFilter();
+        } else {
+            addErrorMessage(buildErrorMessage('Failed to rejudge', response.errors));
+        }
+    }, function () {
+        btn.disabled = false;
+    });
+}
+</script>
+{% endrestrict %}
+
+<hr />
+<h4>Submissions:</h4>
+<p>Found {{ submissions|length }} submissions. ({{ elapse_seconds }} seconds)
+{% if is_limit_triggered %}
+<b>NOTE: Due to specified filtering configuration, rows are limited.</b>
+{% endif %}
+{% if is_too_many_rows_protection_triggered %}
+<b>ATTENTION: Due to weak filtering configuration, rows are limited to 100.</b>
+{% endif %}
+</p>
+{% include "meta_parts/submission_evaluation_list.html" with without_log=True %}
+
+{% endblock %}

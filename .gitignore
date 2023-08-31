@@ -1,0 +1,9 @@
+venv
+__pycache__
+
+sandbox_*.tar.gz
+sandbox_*/
+snapshot_*.tar.gz
+snapshot_*/
+
+current_git_describe.txt

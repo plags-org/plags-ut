@@ -1,0 +1,84 @@
+{# param[List[ExerciseInfo]]: exercises #}
+{# param: user_authority #}
+
+{% comment %} TODO implementation {% endcomment %}
+{% comment %} {% restrict user_authority can_create_exercise %} {% endcomment %}
+{% comment %} <a href={% url 'exercise/create' o_name=organization.name c_name=course.name %}>CREATE EXERCISE</a> {% endcomment %}
+{% comment %} {% endrestrict %} {% endcomment %}
+
+{% comment %} <style>
+.invalid_deadline_setting {
+    /* used <https://css-stripe-generator.firebaseapp.com/> */
+    background-size: auto auto;
+    background-color: rgba(255, 255, 255, 1);
+    background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255, 0, 0, 0.25) 10px, rgba(255, 0, 0, 0.25) 20px );}
+</style> {% endcomment %}
+
+{% if exercises %}
+<table class="data_list">
+    <tr>
+        {% if user_authority.is_superuser %}
+        <th>{% restrict user_authority is_superuser %}ID{% endrestrict %}</th>
+        {% endif %}
+        <th>Name</th>
+        <th>Begin <span data-bs-toggle="tooltip" data-bs-placement="top" title="If not specified, course default ( {{ course.exercise_default_begins_at|date:'Y-m-d H:i:s' }} ) is used"><i class="fas fa-info-circle"></i></span></th>
+        <th>Open  <span data-bs-toggle="tooltip" data-bs-placement="top" title="If not specified, course default ( {{ course.exercise_default_opens_at |date:'Y-m-d H:i:s' }} ) is used"><i class="fas fa-info-circle"></i></span></th>
+        <th>Check <span data-bs-toggle="tooltip" data-bs-placement="top" title="Check is optional and ignored unless Check < Close{% if course.exercise_default_checks_at %}, course default is {{ course.exercise_default_checks_at|date:'Y-m-d H:i:s' }}{% endif %}"><i class="fas fa-info-circle"></i></span></th>
+        <th>Close <span data-bs-toggle="tooltip" data-bs-placement="top" title="If not specified, course default ( {{ course.exercise_default_closes_at|date:'Y-m-d H:i:s' }} ) is used"><i class="fas fa-info-circle"></i></span></th>
+        <th>End   <span data-bs-toggle="tooltip" data-bs-placement="top" title="If not specified, course default ( {{ course.exercise_default_ends_at  |date:'Y-m-d H:i:s' }} ) is used"><i class="fas fa-info-circle"></i></span></th>
+        <th>Draft mode</th>
+        <th>Shared after confirmed</th>
+        <th>Confidentiality of score</th>
+        <th>Confidentiality of remarks</th>
+        {% if user_authority.can_edit_exercise %}
+        <th>{% restrict user_authority can_edit_exercise %}Created at{% endrestrict %}</th>
+        <th>{% restrict user_authority can_edit_exercise %}Created by{% endrestrict %}</th>
+        <th>{% restrict user_authority can_edit_exercise %}Last edit at{% endrestrict %}</th>
+        <th>{% restrict user_authority can_edit_exercise %}Last edit by{% endrestrict %}</th>
+        <th>{% restrict user_authority can_edit_exercise %}Exercise version{% endrestrict %}</th>
+        {% if not without_edit %}
+            <th>{% restrict user_authority can_edit_exercise %}Link{% endrestrict %}</th>
+        {% endif %}
+        {% endif %}
+    </tr>
+    {% for exercise in exercises %}
+    <tr>
+        {% if user_authority.is_superuser %}
+        <td>{% restrict user_authority is_superuser %}{{ exercise.id }}{% endrestrict %}</td>
+        {% endif %}
+        <th><a href={% url 'exercise/view' o_name=organization.name c_name=course.name e_name=exercise.name %}>{{ exercise.name }}</a></th>
+        {% with begins_at_and_origin=exercise.calculated_begins_at_with_origin opens_at_and_origin_=exercise.calculated_opens_at_with_origin checks_at_and_origin=exercise.calculated_checks_at_with_origin closes_at_and_origin=exercise.calculated_closes_at_with_origin ends_at_and_origin__=exercise.calculated_ends_at_with_origin %}
+        <td{% if opens_at_and_origin_.0 < begins_at_and_origin.0                                                    %} class="invalid_deadline_setting"{% endif %}>{% if begins_at_and_origin.1 == 'default' %}(default){% else %}{{ begins_at_and_origin.0|date:'Y-m-d H:i:s' }} ({{ begins_at_and_origin.1 }}){% endif %}</td>
+        <td{% if closes_at_and_origin.0 < opens_at_and_origin_.0 or begins_at_and_origin.0 > opens_at_and_origin_.0 %} class="invalid_deadline_setting"{% endif %}>{% if opens_at_and_origin_.1 == 'default' %}(default){% else %}{{ opens_at_and_origin_.0|date:'Y-m-d H:i:s' }} ({{ opens_at_and_origin_.1 }}){% endif %}</td>
+        <td{% if closes_at_and_origin.0 < checks_at_and_origin.0 or opens_at_and_origin_.0 > checks_at_and_origin.0 %} class="invalid_deadline_setting"{% endif %}>{% if checks_at_and_origin.1 == 'default' %}(default){% else %}{{ checks_at_and_origin.0|date:'Y-m-d H:i:s' }} ({{ checks_at_and_origin.1 }}){% endif %}</td>
+        <td{% if ends_at_and_origin__.0 < closes_at_and_origin.0 or opens_at_and_origin_.0 > closes_at_and_origin.0 %} class="invalid_deadline_setting"{% endif %}>{% if closes_at_and_origin.1 == 'default' %}(default){% else %}{{ closes_at_and_origin.0|date:'Y-m-d H:i:s' }} ({{ closes_at_and_origin.1 }}){% endif %}</td>
+        <td{% if                                                    closes_at_and_origin.0 > ends_at_and_origin__.0 %} class="invalid_deadline_setting"{% endif %}>{% if ends_at_and_origin__.1 == 'default' %}(default){% else %}{{ ends_at_and_origin__.0|date:'Y-m-d H:i:s' }} ({{ ends_at_and_origin__.1 }}){% endif %}</td>
+        {% endwith %}
+        <td {% if exercise.is_draft %}class="exercise_in_draft_mode" data-bs-toggle="tooltip" data-bs-placement="left" title="Draft mode"{% endif %}>
+            {{ exercise.is_draft|yesno:"draft,-" }}
+        </td>
+        <td {% if exercise.calculated_is_shared_after_confirmed %}class="exercise_shared_after_confirmed" data-bs-toggle="tooltip" data-bs-placement="top" title="Shared after Confirmed"{% endif %}>
+            {{ exercise.calculated_is_shared_after_confirmed_display_value }}
+        </td>
+        <td {% if exercise.calculated_score_visible_from <= user_authority.on_course %}class="exercise_score_visible" data-bs-toggle="tooltip" data-bs-placement="top" title="Score visible"{% endif %}>
+            {{ exercise.calculated_score_visible_from_display_value }}
+        </td>
+        <td {% if exercise.calculated_remarks_visible_from <= user_authority.on_course %}class="exercise_remarks_visible" data-bs-toggle="tooltip" data-bs-placement="top" title="Remarks visible"{% endif %}>
+            {{ exercise.calculated_remarks_visible_from_display_value }}
+        </td>
+        {% if user_authority.can_edit_exercise %}
+        <td>{% restrict user_authority can_edit_exercise %}{{ exercise.created_at|date:'Y-m-d H:i:s' }}{% endrestrict %}</td>
+        <td>{% restrict user_authority can_edit_exercise %}{{ exercise.created_by.username }}{% endrestrict %}</td>
+        <td>{% restrict user_authority can_edit_exercise %}{{ exercise.edited_at|date:'Y-m-d H:i:s' }}{% endrestrict %}</td>
+        <td>{% restrict user_authority can_edit_exercise %}{{ exercise.edited_by.username }}{% endrestrict %}</td>
+        <td>{% restrict user_authority can_edit_exercise %}{{ exercise.latest_version }}{% endrestrict %}</td>
+        {% if not without_edit %}
+            <td>{% restrict user_authority can_edit_exercise %}<a href={% url 'exercise/edit' o_name=organization.name c_name=course.name e_name=exercise.name %}>Edit</a>{% endrestrict %}</td>
+        {% endif %}
+        {% endif %}
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+No Exercises.
+{% endif %}

@@ -1,0 +1,62 @@
+{# :param: submission #}
+
+{% if submission.submission_format == 'jupyter_notebook' %}
+<div id="id_view_submission_notebook_{{ submission.id }}__preview" class="jupyter_notebook">Loading ...</div>
+<script>
+$(function () {
+    callAPI('{{ "/api/v0/o/{o_name}/c/{c_name}/submission/get/"|apply_o_name_to_url:organization|apply_c_name_to_url:course }}', {
+        id: {{ submission.id }},
+    }, function (response) {
+        console.dir(response);
+        if (response.ok) {
+            const data = response.data;
+            var notebookJson = JSON.parse(data.submission_file.content);
+            var targetId = "id_view_submission_notebook_{{ submission.id }}__preview";
+            var targetElm = document.getElementById(targetId);
+            var nbv = nbv_constructor(document, {
+                katex: window.katex,
+                prism: window.Prism,
+                marked: window.marked,
+            });
+            nbv.render(notebookJson, targetElm);
+        } else {
+            addErrorMessage(buildErrorMessage('Failed to get preview', response.errors));
+        }
+    });
+});
+</script>
+{% else %}
+<div style="position: relative">
+<span id="id_copied_span_s{{ submission.id }}" style="position: absolute; right: 48px; top: 8px; z-index: 10; display: none;">Copied!</span>
+<button id="id_copy_button_s{{ submission.id }}" style="position: absolute; right: 8px; top: 8px; z-index: 10;"
+        data-bs-toggle="tooltip" data-bs-placement="top" title="Copy to clipboard"
+        onclick="copyTextToClipboard_s{{ submission.id }}()"><i class="fas fa-clipboard"></i></button>
+<script>
+    function copyTextToClipboard_s{{ submission.id }} () {
+        var submission_file_content = {{ submission.submission_file|read_utf8|json_encode|safe }};
+        copyTextToClipboard(submission_file_content, true);
+        $("#id_copied_span_s{{ submission.id }}").fadeIn("slow", function () {
+            setTimeout(() => {
+                $("#id_copied_span_s{{ submission.id }}").fadeOut("slow");
+            }, 1000);
+        });
+    }
+</script>
+<textarea id="id_view_submission_editor__{{ submission.id }}"
+    class="view_exercise_editor">{{ submission.submission_file|read_utf8 }}</textarea>
+{% comment %} TODO WORKAROUND とてもひどいので直す {% endcomment %}
+{% comment %} TODO assert tag とか作って、ここで code editor flag が立っていることを検証したい {% endcomment %}
+<script>
+    $(function () {
+        var editor_options = "{{ submission.exercise.trial_editor_options|escapejs }}";
+        editor_options = editor_options == "None" ? null : JSON.parse(editor_options);
+        update_source_on_codemirror(
+            'id_view_submission_editor__{{ submission.id }}',
+            editor_options,
+            null, /* editor_content */
+            true, /* is_readonly */
+        );
+    });
+</script>
+</div>
+{% endif %}

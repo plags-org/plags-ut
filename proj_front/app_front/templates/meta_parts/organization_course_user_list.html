@@ -1,0 +1,72 @@
+{% comment %} meta_oc_user_list.html のほぼコピペ コース表示が増えるのが差分 {% endcomment %}
+{% comment %} TODO テンプレート含めてうまくコピペを減らす {% endcomment %}
+
+{% if organization_course_users %}
+<a class="inline_link" href={% url 'organization/course_user/export' o_name=organization.name %}>Export</a>
+<table class="data_list">
+    <tr>
+        {% if user_authority.is_superuser %}
+        <th>{% restrict user_authority is_superuser %}Id{% endrestrict %}</th>
+        {% endif %}
+        <th>Username</th>
+        <th>Student Card No.</th>
+        <th>Full name</th>
+        <th>Added at</th>
+        <th>Added by</th>
+        <th>Permitted</th>
+        {% if user_authority.is_superuser %}
+        <th>{% restrict user_authority is_superuser %}Activated at{% endrestrict %}</th>
+        <th>{% restrict user_authority is_superuser %}Activated by{% endrestrict %}</th>
+        {% endif %}
+        <th>Authority</th>
+        {% if user_authority.is_superuser %}
+        <th>{% restrict user_authority is_superuser %}Authorized at{% endrestrict %}</th>
+        <th>{% restrict user_authority is_superuser %}Authorized by{% endrestrict %}</th>
+        {% endif %}
+        {% comment %} <th>View</th> {% endcomment %}
+        {% comment %} {% if user_authority.is_superuser %} {% endcomment %}
+        {% comment %} <th>{% restrict user_authority is_superuser %}Edit{% endrestrict %}</th> {% endcomment %}
+        {% comment %} <th>{% restrict user_authority is_superuser %}Add{% endrestrict %}</th> {% endcomment %}
+        {% comment %} {% endif %} {% endcomment %}
+        <th>Email</th>
+        <th>Course</th>
+    </tr>
+    {% for oc_u in organization_course_users %}
+    <tr>
+        {% if user_authority.is_superuser %}
+        <td>{% restrict user_authority is_superuser %}{{ oc_u.id }}{% endrestrict %}</td>
+        {% endif %}
+        <td>{{ oc_u.user.username }}</td>
+        <td>{{ oc_u.user.student_card_number }}</td>
+        <td>{{ oc_u.user.full_name }}</td>
+        <td>{{ oc_u.added_at|date:'Y-m-d H:i:s' }}</td>
+        <td>{{ oc_u.added_by.username }}</td>
+        <td>{{ oc_u.is_active }}</td>
+        {% if user_authority.is_superuser %}
+        <td>{% restrict user_authority is_superuser %}{{ oc_u.is_active_updated_at|date:'Y-m-d H:i:s' }}{% endrestrict %}</td>
+        <td>{% restrict user_authority is_superuser %}{{ oc_u.is_active_updated_by.username }}{% endrestrict %}</td>
+        {% endif %}
+        <td>{{ oc_u.authority|ds_authority }}</td>
+        {% if user_authority.is_superuser %}
+        <td>{% restrict user_authority is_superuser %}{{ oc_u.authority_updated_at|date:'Y-m-d H:i:s' }}{% endrestrict %}</td>
+        <td>{% restrict user_authority is_superuser %}{{ oc_u.authority_updated_by.username }}{% endrestrict %}</td>
+        {% endif %}
+        {% comment %} <td><a href={% url 'user/profile' u_name=oc_u.user.username %}>Detail</a></td> {% endcomment %}
+        {% comment %} {% if user_authority.is_superuser %} {% endcomment %}
+        {% comment %} <td>{% restrict user_authority is_superuser %}{% endrestrict %}</td> {% endcomment %}
+        {% comment %} <td>{% restrict user_authority is_superuser %}{% endrestrict %}</td> {% endcomment %}
+        {% comment %} {% endif %} {% endcomment %}
+        <td>
+            {% if oc_u.user.email %}
+            <button data-bs-toggle="tooltip" data-bs-placement="top"
+                    title="{{ oc_u.user.email }}"
+                    onclick="copyTextToClipboard('{{ oc_u.user.email }}')">COPY</button>
+            {% else %}(none){% endif %}
+        </td>
+        <td><a href={% url 'course/top' o_name=organization.name c_name=oc_u.course.name %}>{% firstof oc_u.course.title oc_u.course.name %}</a></td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+No Users.
+{% endif %}

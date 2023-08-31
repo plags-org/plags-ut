@@ -1,0 +1,57 @@
+<table class="data_list">
+    <tr>
+        {% if user_authority.is_superuser %}
+        <th>{% restrict user_authority is_superuser %}Id{% endrestrict %}</th>
+        {% endif %}
+        <th>Is faculty</th>
+        <th>Card number</th>
+        <th>Full name</th>
+        <th>Registered at</th>
+        <th>Expires at</th>
+        <th>Activated at</th>
+        {% if user_authority.is_superuser %}
+        <th>{% restrict user_authority is_superuser %}Invited by{% endrestrict %}</th>
+        {% endif %}
+        <th>Invited to</th>
+        <th>Granted authority</th>
+        <th>Activation</th>
+        {% comment %} <th>View</th> {% endcomment %}
+        <th>Email</th>
+    </tr>
+    {% for u in users %}
+    <tr>
+        {% if user_authority.is_superuser %}
+        <td>{% restrict user_authority is_superuser %}{{ u.id }}{% endrestrict %}</td>
+        {% endif %}
+        <td>{{ u.is_faculty }}</td>
+        <td>{{ u.student_card_number }}</td>
+        <td>{{ u.full_name }}</td>
+        <td>{{ u.registered_at|date:'Y-m-d H:i:s' }}</td>
+        <td>{{ u.expired_at|date:'Y-m-d H:i:s' }} ({% if u.is_invitation_expired %}<span data-bs-toggle="tooltip" data-bs-placement="top" title="expired">❌</span>{% else %}{{ u.expired_at|to_time_remaining }}{% endif %})</td>
+        <td>{{ u.activated_at|date:'Y-m-d H:i:s' }}</td>
+        {% if user_authority.is_superuser %}
+        <td>{% restrict user_authority is_superuser %}{{ u.invited_by.username }}{% endrestrict %}</td>
+        {% endif %}
+        <td>
+            {% if u.invited_organization %}
+                {% if u.invited_course %}
+                    <a href={% url 'organization/top' o_name=u.invited_organization.name %}>{% firstof u.invited_organization.title u.invited_organization.name %}</a>
+                    /
+                    <a href={% url 'course/top' o_name=u.invited_organization.name c_name=u.invited_course.name %}>{% firstof u.invited_course.title u.invited_course.name %}</a>
+                {% else %}
+                    <a href={% url 'organization/top' o_name=u.invited_organization.name %}>{% firstof u.invited_organization.title u.invited_organization.name %}</a>
+                {% endif %}
+            {% endif %}
+        </td>
+        <td>{{ u.invited_to_authority|ds_authority_optional }}</td>
+        <td>{% if not u.activation_pin %}✔{% endif %}</td>
+        <td>
+            {% if u.email %}
+            <button data-bs-toggle="tooltip" data-bs-placement="top"
+                    title="{{ u.email }}"
+                    onclick="copyTextToClipboard('{{ u.email }}')">COPY</button>
+            {% else %}(none){% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>

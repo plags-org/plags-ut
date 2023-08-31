@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Course-top notice by organization - [{{ organization.name }} ]{% endblock %}
+
+{% block content %}
+{% include "meta_parts/diagram.html" %}
+
+<hr />
+<h2>Course-top notices for organization [{{ organization.name }}]</h2>
+
+{% restrict user_authority can_edit_organization %}
+<hr />
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Create</button>
+</form>
+{% endrestrict %}
+
+<hr />
+<h4>Notices</h4>
+{% include "meta_parts/course_top_notice_by_organization_list.html" %}
+
+{% endblock %}

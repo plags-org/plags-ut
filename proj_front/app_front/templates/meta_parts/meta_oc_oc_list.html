@@ -1,0 +1,57 @@
+{# param: meta_oc_type: "organization" or "course" #}
+{# param: meta_oc_users: List[Union[OrganizationUser, CourseUser]] #}
+
+<table class="data_list">
+    <tr>
+        {% if user_authority.is_superuser %}
+        <th>{% restrict user_authority is_superuser %}Id{% endrestrict %}</th>
+        {% endif %}
+        <th>Name</th>
+        <th>Added at</th>
+        {% if user_authority.is_superuser %}
+        <th>{% restrict user_authority is_superuser %}Added by{% endrestrict %}</th>
+        <th>{% restrict user_authority is_superuser %}Is active{% endrestrict %}</th>
+        <th>{% restrict user_authority is_superuser %}Activated at{% endrestrict %}</th>
+        <th>{% restrict user_authority is_superuser %}Activated by{% endrestrict %}</th>
+        {% endif %}
+        <th>Authority</th>
+        {% if user_authority.is_superuser %}
+        <th>{% restrict user_authority is_superuser %}Authorized at{% endrestrict %}</th>
+        <th>{% restrict user_authority is_superuser %}Authorized by{% endrestrict %}</th>
+        {% endif %}
+    </tr>
+    {% for oc_u in meta_oc_users %}
+    <tr>
+        {% if user_authority.is_superuser %}
+        <td>{% restrict user_authority is_superuser %}{{ oc_u.id }}{% endrestrict %}</td>
+        {% endif %}
+        <td>
+            {% comment %} TODO refactor {% endcomment %}
+            {% if oc_u.is_active %}
+            {% if meta_oc_type == 'organization' %}
+            <a href={% url 'organization/top' o_name=oc_u.organization.name %}>{{ oc_u.organization.name }}</a></td>
+            {% elif meta_oc_type == 'course' %}
+            <a href={% url 'course/top' o_name=oc_u.course.organization.name c_name=oc_u.course.name %}>{{ oc_u.course.organization.name }} / {{ oc_u.course.name }}</a></td>
+            {% endif %}
+            {% else %}
+            {% if meta_oc_type == 'organization' %}
+            {{ oc_u.organization.name }} (kicked out)</td>
+            {% elif meta_oc_type == 'course' %}
+            {{ oc_u.course.name }} (kicked out)</td>
+            {% endif %}
+            {% endif %}
+        <td>{{ oc_u.added_at|date:'Y-m-d H:i:s' }}</td>
+        {% if user_authority.is_superuser %}
+        <td>{% restrict user_authority is_superuser %}{{ oc_u.added_by.username }}{% endrestrict %}</td>
+        <td>{% restrict user_authority is_superuser %}{{ oc_u.is_active }}{% endrestrict %}</td>
+        <td>{% restrict user_authority is_superuser %}{{ oc_u.is_active_updated_at|date:'Y-m-d H:i:s' }}{% endrestrict %}</td>
+        <td>{% restrict user_authority is_superuser %}{{ oc_u.is_active_updated_by.username }}{% endrestrict %}</td>
+        {% endif %}
+        <td>{{ oc_u.authority|ds_authority }}</td>
+        {% if user_authority.is_superuser %}
+        <td>{% restrict user_authority is_superuser %}{{ oc_u.authority_updated_at|date:'Y-m-d H:i:s' }}{% endrestrict %}</td>
+        <td>{% restrict user_authority is_superuser %}{{ oc_u.authority_updated_by.username }}{% endrestrict %}</td>
+        {% endif %}
+    </tr>
+    {% endfor %}
+</table>

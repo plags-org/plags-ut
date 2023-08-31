@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Application Data Migration{% endblock %}
+
+{% block content %}
+{% include "meta_parts/diagram.html" %}
+
+{% if user_authority.is_superuser %}
+<h2>Application Data Migration</h2>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">MIGRATE</button>
+</form>
+
+<hr />
+
+{% include 'meta_parts/application_data_version_history.html' %}
+
+{% if console_message %}
+<hr />
+<span>{% if is_successful %} Successful. {% else %} Failed. {% endif %}</span>
+<textarea readonly rows="32" style="width:100%; font-family:monospace">{{ console_message }}</textarea>
+{% endif %}
+
+{% endif %}
+{% endblock %}

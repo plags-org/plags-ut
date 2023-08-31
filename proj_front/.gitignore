@@ -1,0 +1,25 @@
+.venv
+__pycache__
+
+db.sqlite3
+
+external_data/
+exercise_form_files/
+submission_files/
+submission_parcel_files/
+job_outcome_files/
+develop_files/
+
+__debug__*
+__code_analysis__*
+
+sandbox*
+
+snyk-linux-cli
+
+# pytest coverage
+htmlcov/
+.coverage
+
+# linter intermediate outputs
+lint_result_mypy.raw.txt

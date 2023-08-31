@@ -1,0 +1,29 @@
+{# param[bool]: is_state_case_detail_viewable: state, case に関する詳細を閲覧可能 #}
+
+{% load mathfilters %}
+
+<table class="data_list">
+    <tr>
+        <th>Stage name</th>
+        <th>Status</th>
+        <th>Time [ms]</th>
+        <th>Memory [MiB]</th>
+        <th>Tags</th>
+        {% if user_authority.can_review_submission %}
+        <th>{% restrict user_authority can_review_submission %}System score{% endrestrict %}</th>
+        {% endif %}
+    </tr>
+    {% for state, state_result in evaluation_result.state_results.items %}
+        {% include 'meta_parts/state_runner_compatibility/interface.html' with state=state state_result=state_result %}
+    {% endfor %}
+    <tr>
+        <th>Overall</th>
+        <td>{{ evaluation_result.overall_result.status_set|status_of_result_types_as_html }}</td>
+        <td>{{ evaluation_result.overall_result.time|intdiv:1000000 }}</td>
+        <td>{{ evaluation_result.overall_result.memory|intdiv:1024 }}</td>
+        <td>{{ evaluation_result.overall_result.tag_set|tag_set_as_html_v2:custom_evaluation_tag_manager }}</td>
+        {% if user_authority.can_review_submission %}
+        <td>{% restrict user_authority can_review_submission %}{{ evaluation_result.overall_result.grade }}{% endrestrict %}</td>
+        {% endif %}
+    </tr>
+</table>

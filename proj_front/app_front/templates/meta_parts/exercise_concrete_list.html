@@ -1,0 +1,28 @@
+{% if exercise_concretes %}
+<table class="data_list">
+    <tr>
+        {% if user_authority.can_edit_organization %}
+        <th>{% restrict user_authority can_edit_organization %}ID{% endrestrict %}</th>
+        {% endif %}
+        <th>Name</th>
+        <th>Version</th>
+        <th>Internal version (directory hash)</th>
+        <th>Created at</th>
+        <th>Created by</th>
+    </tr>
+    {% for exercise_concrete in exercise_concretes %}
+    <tr>
+        {% if user_authority.can_edit_organization %}
+        <td>{% restrict user_authority can_edit_organization %}{{ exercise_concrete.id }}{% endrestrict %}</td>
+        {% endif %}
+        <th><a href={% url 'exercise_concrete/view' o_name=organization.name ec_name=exercise_concrete.name ec_hash=exercise_concrete.version %}>{{ exercise_concrete.name }}</a></th>
+        <td>{{ exercise_concrete.exercise_version }}</td>
+        <td>{{ exercise_concrete.version }}</td>
+        <td>{{ exercise_concrete.created_at|date:'Y-m-d H:i:s' }}</td>
+        <td>{{ exercise_concrete.created_by.username }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+No ExerciseConcretes.
+{% endif %}

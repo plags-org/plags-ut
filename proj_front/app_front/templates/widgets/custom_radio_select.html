@@ -1,0 +1,14 @@
+{% comment %}
+- help_text をつけると padding と br のせいで空白が幅を取りすぎて気持ち悪い。
+- Django 4.0 で ul/li から div に切り替わっているので、 4.0 の Widget からコピーするとともに、 br 対策として style="display:inline-block" を加える。
+- cf. https://github.com/django/django/blob/main/django/forms/templates/django/forms/widgets/multiple_input.html
+{% endcomment %}
+
+{% with id=widget.attrs.id %}
+<div{% if id %} id="{{ id }}"{% endif %}{% if widget.attrs.class %} class="{{ widget.attrs.class }}"{% endif %} style="display:inline-block">
+  {% for group, options, index in widget.optgroups %}{% if group %}
+  <div><label>{{ group }}</label>{% endif %}{% for option in options %}<div>
+    {% include option.template_name with widget=option %}</div>{% endfor %}{% if group %}
+  </div>{% endif %}{% endfor %}
+</div>
+{% endwith %}

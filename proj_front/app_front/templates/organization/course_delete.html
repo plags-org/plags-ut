@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Courses in Organization [{{ organization.name }}]{% endblock %}
+
+{% block content %}
+{% include 'meta_parts/diagram.html' %}
+
+<hr />
+<h2>Delete Courses in Organization [{{ organization.name }}]</h2>
+
+<p><strong>ATTENTION</strong>: Deleted courses will no longer be viewable.</p>
+
+{% comment %} TODO 編集対象コースの現設定を一覧/サマリ化できると良い LenovoのPC比較とかIntelのCPU比較みたいなイメージ {% endcomment %}
+
+<form method="post">
+    {% csrf_token %}
+    <table class="table_form">
+        {{ delete_form.as_table }}
+    </table>
+    <button type="submit" name="delete_courses" class="btn btn-danger">Delete</button>
+</form>
+
+<hr />
+<h2>Courses:</h2>
+{% include 'meta_parts/course_list_setting.html' with courses=courses without_create_link=True %}
+
+{% if user_authority.is_superuser %}
+{% restrict user_authority is_superuser %}
+<hr />
+<form method="post">
+    {% csrf_token %}
+    <table class="table_form">
+        {{ restore_form.as_table }}
+    </table>
+    <button type="submit" name="restore_courses" class="btn btn-primary">Restore</button>
+</form>
+
+<hr />
+<h2>Deleted Courses:</h2>
+{% include 'meta_parts/course_list_setting.html' with courses=deleted_courses without_create_link=True %}
+{% endrestrict %}
+{% endif %}
+
+{% endblock %}

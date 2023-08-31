@@ -1,0 +1,28 @@
+<table class="data_list">
+    <tr>
+        <th>Current Application</th>
+        <td>{{ current_application_version.major_version }}</td>
+        <td>{{ current_application_version.minor_version }}</td>
+        <td>{{ current_application_version.patch_version }}</td>
+    </tr>
+    <tr>
+        <th>Current Data</th>
+        <td>{{ current_application_data_version.major_version }}</td>
+        <td>{{ current_application_data_version.minor_version }}</td>
+        <td>{{ current_application_data_version.patch_version }}</td>
+    </tr>
+    <tr>
+        <th>Created at</th>
+        <th>Major</th>
+        <th>Minor</th>
+        <th>Patch</th>
+    </tr>
+    {% for version in application_data_version_histories %}
+    <tr>
+        <td>{{ version.created_at|date:'Y-m-d H:i:s' }}</td>
+        <td>{{ version.major_version }}</td>
+        <td>{{ version.minor_version }}</td>
+        <td>{{ version.patch_version }}</td>
+        </tr>
+    {% endfor %}
+</table>

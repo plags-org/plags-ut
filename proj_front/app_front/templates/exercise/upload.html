@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}Upload Exercise - [ {{ organization.name }} / {{ course.title }} ]{% endblock %}
+
+{% block content %}
+{% include "meta_parts/diagram.html" %}
+
+<h2>Upload exercise</h2>
+
+<hr />
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Upload</button>
+</form>
+{% endblock %}

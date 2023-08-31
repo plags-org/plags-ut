@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% include "meta_parts/diagram.html" %}
+
+<hr />
+<h2>Submission dashboard on Course [{{ course.title }}], [{{ organization.name }}]</h2>
+
+<p>Reviewed or latest submissions are displayed here.</p>
+
+{% for exercise_name, info in exercise_submissions.items %}
+<hr />
+<h4>[{{ info.exercise.title }}]:</h4>
+{% include "meta_parts/submission_list_with_review.html" with submissions=info.submissions %}
+
+{% endfor %}
+
+{% endblock %}

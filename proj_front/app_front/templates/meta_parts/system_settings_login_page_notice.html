@@ -1,0 +1,9 @@
+{% if system_settings.use_login_page_notice %}
+<div style="margin-top: 32px; border: 4px ridge grey; padding: 8px 16px">
+<h3 style="display:flex;justify-content:center;align-items:center">
+{{ system_settings.login_page_notice_title|safe }}</h3>
+{{ system_settings.login_page_notice_text|safe }}
+</div>
+{% elif is_preview %}
+(Display nothing)
+{% endif %}

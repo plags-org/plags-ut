@@ -1,0 +1,43 @@
+{% restrict user_authority is_superuser %}
+<a class="inline_link" href={% url 'organization/create' %}>CREATE NEW ORGANIZATION</a>
+{% endrestrict %}
+
+{% if organizations %}
+<table class="data_list">
+    <tr>
+        {% if user_authority.is_superuser %}
+        <th>{% restrict user_authority is_superuser %}Id{% endrestrict %}</th>
+        {% endif %}
+        <th>Name</th>
+        <th>Created at</th>
+        {% if user_authority.is_superuser %}
+        <th>{% restrict user_authority is_superuser %}Created by{% endrestrict %}</th>
+        <th>{% restrict user_authority is_superuser %}Is active{% endrestrict %}</th>
+        <th>{% restrict user_authority is_superuser %}Authorized at{% endrestrict %}</th>
+        <th>{% restrict user_authority is_superuser %}Authorized by{% endrestrict %}</th>
+        {% endif %}
+        <th>Edit</th>
+    </tr>
+    {% for organization in organizations %}
+    <tr>
+        {% if user_authority.is_superuser %}
+        <th>{% restrict user_authority is_superuser %}{{ organization.id }}{% endrestrict %}</th>
+        {% endif %}
+        <th><a href={% url 'organization/top' o_name=organization.name %}>{{ organization.name }}</a></th>
+        <td>{{ organization.created_at|date:'Y-m-d H:i:s' }}</td>
+        {% if user_authority.is_superuser %}
+        <td>{% restrict user_authority is_superuser %}{{ organization.created_by.username }}{% endrestrict %}</td>
+        <td>{% restrict user_authority is_superuser %}{{ organization.is_active }}{% endrestrict %}</td>
+        <td>{% restrict user_authority is_superuser %}{{ organization.is_active_updated_at|date:'Y-m-d H:i:s' }}{% endrestrict %}</td>
+        <td>{% restrict user_authority is_superuser %}{{ organization.is_active_updated_by.username }}{% endrestrict %}</td>
+        {% endif %}
+        <td>
+            <a href={% url 'organization_user/add_faculty' o_name=organization.name %} style="white-space: nowrap;">Add Faculty User</a>
+            <a href={% url 'organization_user/change_faculty' o_name=organization.name %} style="white-space: nowrap;">Change Faculty User</a>
+        </td>
+        </tr>
+    {% endfor %}
+</table>
+{% else %}
+No Organizations.
+{% endif %}

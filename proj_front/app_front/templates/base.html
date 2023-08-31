@@ -1,0 +1,520 @@
+{% load static %}
+{% load tz %}
+{% get_current_timezone as SERVER_TZ %}
+{% timezone user.timezone|default:SERVER_TZ %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset='UTF-8' />
+    <title>{{ 0|software_name_with_env }} - {% block title %}{% endblock %}</title>
+
+    {# favicon #}
+    <link rel="apple-touch-icon" sizes="57x57" href="{% static 'icon/apple-icon-57x57.png' %}">
+    <link rel="apple-touch-icon" sizes="60x60" href="{% static 'icon/apple-icon-60x60.png' %}">
+    <link rel="apple-touch-icon" sizes="72x72" href="{% static 'icon/apple-icon-72x72.png' %}">
+    <link rel="apple-touch-icon" sizes="76x76" href="{% static 'icon/apple-icon-76x76.png' %}">
+    <link rel="apple-touch-icon" sizes="114x114" href="{% static 'icon/apple-icon-114x114.png' %}">
+    <link rel="apple-touch-icon" sizes="120x120" href="{% static 'icon/apple-icon-120x120.png' %}">
+    <link rel="apple-touch-icon" sizes="144x144" href="{% static 'icon/apple-icon-144x144.png' %}">
+    <link rel="apple-touch-icon" sizes="152x152" href="{% static 'icon/apple-icon-152x152.png' %}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'icon/apple-icon-180x180.png' %}">
+    {% comment %}
+    <link rel="icon" type="image/png" sizes="36x36"  href="{% static 'icon/android-icon-36x36.png' %}">
+    <link rel="icon" type="image/png" sizes="48x48"  href="{% static 'icon/android-icon-48x48.png' %}">
+    <link rel="icon" type="image/png" sizes="72x72"  href="{% static 'icon/android-icon-72x72.png' %}">
+    <link rel="icon" type="image/png" sizes="96x96"  href="{% static 'icon/android-icon-96x96.png' %}">
+    <link rel="icon" type="image/png" sizes="144x144"  href="{% static 'icon/android-icon-144x144.png' %}">
+    <link rel="icon" type="image/png" sizes="192x192"  href="{% static 'icon/android-icon-192x192.png' %}">
+    {# error offurs. #}
+    <link rel="manifest" href="{% static 'icon/manifest.json' %}">
+    {% endcomment %}
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'icon/favicon-16x16.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'icon/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="96x96" href="{% static 'icon/favicon-96x96.png' %}">
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="msapplication-TileImage" content="/ms-icon-144x144.png">
+    <meta name="theme-color" content="#ffffff">
+
+    {# JQuery #}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+    {# bootstrap 5 #}
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        .selector-for-some-widget {
+            box-sizing: content-box;
+        }
+    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+
+    {# data-bs-toggle="tooltip" is depending on this #}
+    <script>
+        $(function () {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+    </script>
+
+    <link href="{% static 'fontawesome_free/css/all.min.css' %}" rel="stylesheet" type="text/css">
+    <script src="{% static 'fontawesome_free/js/all.min.js' %}"></script>
+
+    {# settings for "code editor" #}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.44.0/codemirror.css" type="text/css"></link>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.44.0/codemirror.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.44.0/mode/clike/clike.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.44.0/mode/gas/gas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.44.0/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.44.0/mode/scheme/scheme.min.js"></script>
+
+    <style>
+        .CodeMirror {
+            font-family: Monaco, 'Andale Mono', 'Lucida Console', 'Bitstream Vera Sans Mono', 'Courier New', Courier, monospace;
+            font-size: 9pt;
+            height: 100%;
+            border: solid 1px #ccc;
+        }
+        .CodeMirror-scroll {
+            min-height: 152px;
+        }
+    </style>
+
+    {# settings for "markdown + mathjax + sequence + flow" previewer #}
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.0.0-alpha1/jquery.min.js"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.5/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.1.4/raphael-min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.10.1/lodash.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.11.3/flowchart.min.js"></script>
+    <script type="text/x-mathjax-config">
+        MathJax.Hub.Config({
+            skipStartupTypeset: true,
+            extensions: ["tex2jax.js"],
+            jax: ["input/TeX", "output/HTML-CSS"],
+            tex2jax: {
+                inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+                displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+                processEscapes: true
+            },
+            "HTML-CSS": {
+                availableFonts: ["TeX"]
+            }
+        });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.5.3/MathJax.js?config=TeX-AMS-MML_HTMLorMML&delayStartupUntil=configured"></script>
+    <script>
+        marked.setOptions({
+            renderer: new marked.Renderer(),
+            gfm: true,
+            tables: true,
+            breaks: true,
+            pedantic: false,
+            sanitize: false,
+            smartLists: false,
+            smartypants: false
+        });
+        MathJax.Hub.Configured();
+
+        function markdown_plus_to_html(text) {
+            var PREFIX = "\n<pre><code class=\"lang-math\">";
+            var SUFFIX = "</code></pre>\n";
+            var reg = /\$\$([\s\S]+?)\$\$/gm;
+            var tuple = null;
+            var _text = text;
+            while (tuple = reg.exec(text)) {
+                _text = _text.replace(tuple[0], PREFIX + tuple[1] + SUFFIX);
+            }
+
+            var PREFIX = "<span class=\"lang-math-inline\">```";
+            var SUFFIX = "```</span>";
+            var reg = /\$([^\r\n]+?)\$/g;
+            var _text = text;
+            var tuple = null;
+            while (tuple = reg.exec(text)) {
+                _text = _text.replace(tuple[0], PREFIX + tuple[1] + SUFFIX);
+            }
+
+            return marked(text);
+        }
+
+        function reflect_markdown_plus_designs(root) {
+            root = root || document.body;
+            $(root).find(".lang-math-inline").map(function(i, elm) {
+                console.log(elm);
+                var code = $(elm).children().html()
+                    .replace(/\&amp;/g, "&")
+                    .replace(/\&lt;/g, "<")
+                    .replace(/\&gt;/g, ">");
+                $(elm).after("$" + code + "$").remove();
+            });
+            $(root).find(".lang-math").map(function(i, elm) {
+                var code = $(elm).html()
+                    .replace(/\&amp;/g, "&")
+                    .replace(/\&lt;/g, "<")
+                    .replace(/\&gt;/g, ">");
+                $(elm).parent().after("$$" + code + "$$").remove();
+            });
+            MathJax.Hub.Queue(["Typeset", MathJax.Hub, root]);
+
+            $(root).find(".lang-sequence").map(function(i, elm) {
+                var code = $(elm).html()
+                    .replace(/\&amp;/g, "&")
+                    .replace(/\&lt;/g, "<")
+                    .replace(/\&gt;/g, ">");
+                var div = document.createElement("div");
+                $(elm).parent().after(div).remove();
+                Diagram.parse(code).drawSVG(div, {theme: "simple", scale: 1});
+            });
+
+            $(root).find(".lang-flow").map(function(i, elm) {
+                var code = $(elm).html()
+                    .replace(/\&amp;/g, "&")
+                    .replace(/\&lt;/g, "<")
+                    .replace(/\&gt;/g, ">");
+                var div = document.createElement("div");
+                $(elm).parent().after(div).remove();
+                flowchart.parse(code).drawSVG(div);
+            });
+        }
+
+        $(function () {
+            $('.static_markdown_content').map(function(i, elm) {
+                elm.innerHTML = markdown_plus_to_html(elm.innerText);
+            });
+            reflect_markdown_plus_designs();
+        });
+
+        // for i18n content tab
+        function open_meta_ce_content_i18n(evt, meta_ce_type, meta_ce_name, lang) {
+            const content_class = 'view_' + meta_ce_type + '_concrete_tab_content__' + meta_ce_name;
+            var tab_contents = document.getElementsByClassName(content_class);
+            for (let i = 0; i < tab_contents.length; i++) {
+                tab_contents[i].style.display = 'none';
+            }
+            const content_id = content_class + '__' + lang;
+            document.getElementById(content_id).style.display = 'block';
+
+            const tab_link_class = 'view_' + meta_ce_type + '_concrete_tab_link__' + meta_ce_name;
+            var tab_links = document.getElementsByClassName(tab_link_class);
+            for (let i = 0; i < tab_links.length; i++) {
+                tab_links[i].className = tab_links[i].className.replace(' active', '');
+            }
+            evt.currentTarget.className += ' active';
+        }
+
+        // for exercise submission code editor
+        function update_source_on_codemirror(editor_elm_id, editor_options, editor_content, is_readonly=false) {
+            var editor_elm = document.getElementById(editor_elm_id);
+            var editorOptions;
+            if (editor_options) {
+                editorOptions = JSON.parse(JSON.stringify(editor_options));
+            } else {
+                // fallback
+                editorOptions = {
+                    lineNumbers: true,
+                    matchBrackets: true,
+                    indentUnit: 4,
+                    mode: {"name": "python", "singleLineStringErrors": true},
+                };
+            }
+            editorOptions.readOnly = is_readonly;
+            var editor = CodeMirror.fromTextArea(editor_elm, editorOptions);
+            if (editor_content != null) {
+                editor.setValue(editor_content);
+                editor.save();
+            }
+        }
+
+        // for student card number input assist
+        function no_student_card_number_change_hook() {
+            var checked = $('#id_no_student_card_number').prop('checked');
+            if (checked) {
+                $('#id_student_card_number').val('');
+                $('#id_student_card_number').prop('disabled', true);
+            } else {
+                $('#id_student_card_number').prop('disabled', false);
+                $('#id_is_faculty').prop('checked', false);
+            }
+        }
+        function add_no_student_card_number_change_hook() {
+            no_student_card_number_change_hook();
+            $('#id_no_student_card_number').change(no_student_card_number_change_hook);
+        }
+
+        // for is faculty input assist
+        function is_faculty_change_hook() {
+            var checked = $('#id_is_faculty').prop('checked');
+            if (checked) {
+                $('#id_no_student_card_number').prop('checked', true);
+                no_student_card_number_change_hook();
+            }
+        }
+    </script>
+
+    {% comment %} settings for "Jupyter Notebook" previewer begin {% endcomment %}
+    <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/prism/1.5.1/themes/prism.min.css'/>
+    <script defer src='https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.6/marked.min.js'></script>
+    <script defer src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.5.1/prism.min.js' data-manual></script>
+    <script defer src='https://cdnjs.cloudflare.com/ajax/libs/prism/1.5.1/components/prism-python.min.js' data-manual></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.css" integrity="sha384-zB1R0rpPzHqg7Kpt0Aljp8JPLqbXI3bhnPWROx27a9N0Ll6ZP/+DiW/UqRcLbRjq" crossorigin="anonymous">
+
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.11.1/dist/katex.min.js" integrity="sha384-y23I5Q6l+B6vatafAwxRu/0oK/79VlbSz7Q9aiSZUvyWYIYsd+qj+o24G5ZU2zJz" crossorigin="anonymous"></script>
+    <script defer src="https://kokes.github.io/nbviewer.js/lib/nbv.js"></script>
+    {% comment %} settings for "Jupyter Notebook" previewer end {% endcomment %}
+
+    <link href="{% static 'css/main.css' %}" rel='stylesheet' type='text/css'></link>
+
+    {% comment %} for react {% endcomment %}
+    {% comment %} cf. <https://reactjs.org/docs/cdn-links.html> {% endcomment %}
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+    {% comment %} for JSX {% endcomment %}
+    {% comment %} cf. <https://babeljs.io/docs/en/babel-standalone> {% endcomment %}
+    <script crossorigin src="https://unpkg.com/@babel/standalone@7.20.11/babel.min.js"></script>
+
+    {% comment %} for react-bootstrap {% endcomment %}
+    <script crossorigin src="https://unpkg.com/react-bootstrap@2.7.0/dist/react-bootstrap.min.js"></script>
+
+    {% comment %} for graphql-ws {% endcomment %}
+    <script crossorigin src="https://unpkg.com/graphql-ws@5.11.2/umd/graphql-ws.min.js"></script>
+
+    <script>
+        const copyTextToClipboard = (str, withoutAlert) => {
+            const el = document.createElement('textarea');
+            el.value = str;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            if (!withoutAlert) {
+                alert(`Copied [ ${str} ] to your clipboard!`);
+            }
+        };
+    </script>
+
+    {% comment %} Cookies library {% endcomment %}
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>
+
+    {% comment %} APIs for calling API {% endcomment %}
+    <script>
+        function addMessage (message, tags) {
+            {% comment %} mimic app_front/templates/meta_parts/messages.html {% endcomment %}
+
+            const close_button_elm = document.createElement('button');
+            close_button_elm.classList.add('btn-close');
+            close_button_elm.setAttribute('type', 'button');
+            close_button_elm.setAttribute('data-bs-dismiss', 'alert');
+            close_button_elm.setAttribute('aria-label', 'Close');
+            close_button_elm.setAttribute('fade', 'fade');
+            close_button_elm.setAttribute('show', 'show');
+
+            const message_elm = document.createElement('li');
+            message_elm.classList.add('alert');
+            for (let tag of (tags || [])) {
+                message_elm.classList.add('alert-' + tag);
+            }
+
+            const date = new Date();
+            const error_message = `[${date.toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}] ${message}`;
+
+            message_elm.classList.add('alert-dismissible');
+            message_elm.style.whiteSpace = 'pre';
+            message_elm.setAttribute('role', 'alert');
+            message_elm.appendChild(document.createTextNode(error_message));
+            message_elm.appendChild(close_button_elm);
+
+            document.getElementById('id_messages_ul').appendChild(message_elm);
+        }
+
+        function addSuccessMessage (message) {
+            addMessage(message, ['success']);
+        }
+
+        function addInfoMessage (message) {
+            addMessage(message, ['info']);
+        }
+
+        function addWarningMessage (message) {
+            addMessage(message, ['warning']);
+        }
+
+        function addErrorMessage (message) {
+            addMessage(message, ['danger']);
+        }
+
+        function buildErrorMessage (heading, errors) {
+            return heading + '\n' + errors.map(error => {
+                return `${error.type}(${error.loc.join(', ')}): ${error.msg}`;
+            }).join('\n');
+        }
+
+        function callAPIPromise (resource, data) {
+            const csrftoken = Cookies.get('csrftoken');
+            return fetch(resource, {
+                method: 'POST',
+                mode: 'same-origin',    // Do not send CSRF token to another domain.
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify(data),
+            }).then(response => {
+                if (response.status != 200) {
+                    throw new Error(`[status:${response.status}] API error occurred.`)
+                }
+                if (!response.ok) {
+                    throw new Error(`[status:${response.status}] API response was not ok.`)
+                }
+                return response.json();
+            }).catch(error => {
+                console.error(error);
+                if (error.message) throw error;
+                throw new Error('Unexpected error.')
+            });
+        }
+
+        function callAPI (resource, data, successHandler, deferHandler) {
+            const deferHandlerOrNothing = deferHandler || (() => {});
+            const csrftoken = Cookies.get('csrftoken');
+            return callAPIPromise(resource, data).then(successHandler).catch(error => {
+                addErrorMessage(error.message);
+                deferHandlerOrNothing();
+            });
+        }
+
+        function renderCourseNotebookViaAPI (organizationName, courseName, targetId) {
+            callAPIPromise(`/api/v0/o/${organizationName}/c/${courseName}/course/get/`, {
+            }).then((response) => {
+                console.dir(response);
+                if (response.ok) {
+                    const data = response.data;
+                    const notebookJson = {
+                        "cells": [
+                            {
+                                "cell_type": "markdown",
+                                "metadata": {},
+                                "source": [
+                                    data.description_markdown,
+                                ]
+                            },
+                        ],
+                        "metadata": {
+                            "kernelspec": {
+                                "display_name": "Python 3",
+                                "language": "python",
+                                "name": "python3"
+                            },
+                            "language_info": {
+                                "name": "python"
+                            }
+                        },
+                        "nbformat": 4,
+                        "nbformat_minor": 4
+                    };
+                    var targetElm = document.getElementById(targetId);
+                    var nbv = nbv_constructor(document, {
+                        katex: window.katex,
+                        prism: window.Prism,
+                        marked: window.marked,
+                    });
+                    nbv.render(notebookJson, targetElm);
+                } else {
+                    addErrorMessage(buildErrorMessage('Failed to get preview', response.errors));
+                }
+            });
+        }
+
+        function renderExerciseNotebookViaAPI (organizationName, courseName, exerciseName, targetId) {
+            callAPIPromise(`/api/v0/o/${organizationName}/c/${courseName}/exercise/get/`, {
+                name: exerciseName,
+            }).then((response) => {
+                console.dir(response);
+                if (response.ok) {
+                    const data = response.data;
+                    var notebookJson = JSON.parse(data.body_ipynb_json);
+                    console.log(data.body_ipynb_json);
+                    var targetElm = document.getElementById(targetId);
+                    var nbv = nbv_constructor(document, {
+                        katex: window.katex,
+                        prism: window.Prism,
+                        marked: window.marked,
+                    });
+                    nbv.render(notebookJson, targetElm);
+                } else {
+                    addErrorMessage(buildErrorMessage('Failed to get preview', response.errors));
+                }
+            });
+        }
+
+        function deleteCustomEvaluationTagViaAPI (organizationName, courseName, tagCode, cet_eb64) {
+            if (!confirm(`Delete tag ${tagCode}`)) return;
+            callAPI(`/api/v0/o/${organizationName}/c/${courseName}/custom_evaluation_tag/delete/`, {
+                cet_eb64,
+            }, function (response) {
+                if (response.ok) {
+                    addSuccessMessage(`Tag ${tagCode} deleted. Refresing view ...`);
+                    setTimeout(function () { location.reload(); }, 1000);
+                } else {
+                    addErrorMessage(buildErrorMessage(`Failed to delete tag ${tagCode}`, response.errors));
+                }
+            });
+        }
+    </script>
+
+    {% comment %} 各ページで加えて必要等なる要素を記述するblock {% endcomment %}
+    {% comment %} NOTE 今回は結局不要になったが、いつか使いそうなので残す {% endcomment %}
+    {% comment %} {% block extra_head %}{% endblock %} {% endcomment %}
+</head>
+
+<body>
+    <body>
+        <div class="page_header">
+            <div class="page_header_title">
+                {% if user.is_authenticated %}
+                <a href={% url 'profile' %}>{{ 0|software_name_with_env }}</a>
+                {% else %}
+                <a href={% url 'login' %}>{{ 0|software_name_with_env }}</a>
+                {% endif %}
+            </div>
+            <div class="page_header_user_tools">
+            {% if user.is_authenticated %}
+                <div class="page_header_profile">
+                    <a href={% url 'profile' %}>{{ user.username }}
+                        {% if user.google_id_info_picture %}
+                        <img src="{{ user.google_id_info_picture }}" class="page_header_profile_image" />
+                        {% endif %}
+                    </a>
+                </div>
+                <div class="page_header_logout">
+                    <a href={% url 'logout' %}>LOGOUT</a>
+                </div>
+            {% else %}
+                <div class="page_header_login">
+                    <a href={% url 'login' %}>LOGIN</a>
+                </div>
+            {% endif %}
+            </div>
+        </div>
+        <div class="content container" style="padding: 8px 0px;">
+            {% include 'meta_parts/messages.html' with messages=messages %}
+            {% block content %}{% endblock %}
+        </div>
+    </body>
+</body>
+
+<hr />
+
+<footer>
+    <div style="border-top: 1px; text-align: center; padding: 8px 0px;">
+        <span>© 2022 PLAGS UT</span>
+    </div>
+</footer>
+
+</html>
+{% endtimezone %}

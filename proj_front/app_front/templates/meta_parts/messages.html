@@ -1,0 +1,10 @@
+{% load i18n %}
+
+<ul id="id_messages_ul" class="messages_ul">
+    {% for message in messages %}
+    <li class="alert{% if message.tags %} alert-{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </li>
+    {% endfor %}
+</ul>

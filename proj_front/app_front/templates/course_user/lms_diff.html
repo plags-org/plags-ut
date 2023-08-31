@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Course Users Diff - [{{ organization.name }} / {{ course.title }}]{% endblock %}
+
+{% block content %}
+{% include "meta_parts/diagram.html" %}
+
+{% restrict user_authority can_manage_course_user %}
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <h3>Upload LMS Excel file</h3>
+    {{ form.as_p }}
+    <button type="submit" class="significant_button">Check</button>
+</form>
+<hr />
+
+<h3>Students only in PLAGS UT:</h3>
+{% include 'meta_parts/meta_oc_user_list.html' with meta_oc_users=course_users_only_in_plags %}
+<hr />
+
+<h3>Students only in ITC-LMS:</h3>
+{% if course_users_only_in_lms %}
+<table class="data_list">
+    <tr>
+        <th>Common ID No.</th>
+        <th>Student Card No.</th>
+        <th>Full name</th>
+    </tr>
+    {% for lms_user in course_users_only_in_lms %}
+    <tr>
+        <td>{{ lms_user.common_id_number }}</td>
+        <td>{{ lms_user.student_card_number }}</td>
+        <td>{{ lms_user.full_name }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+No Users.
+{% endif %}
+<hr />
+
+<h3>Students in both PLAGS UT and ITC-LMS with inconsistent student card numbers:</h3>
+{% include 'meta_parts/meta_oc_user_list_lms_diff.html' with meta_oc_user_pairs=course_users_in_both_with_conflict %}
+<hr />
+
+<h3>Students in both PLAGS UT and ITC-LMS:</h3>
+{% include 'meta_parts/meta_oc_user_list.html' with meta_oc_users=course_users_in_both_without_conflict %}
+<hr />
+{% endrestrict %}
+
+{% endblock %}

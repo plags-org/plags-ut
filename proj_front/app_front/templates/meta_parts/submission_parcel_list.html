@@ -1,0 +1,51 @@
+{# param: user: default #}
+{# param: user_authority: annexed by default #}
+{# param: submission_parcels: iterable of model.SubmissionParcel #}
+
+{% if submission_parcels %}
+<table class="data_list">
+    <tr>
+        {% if user_authority.is_superuser %}
+        <th>{% restrict user_authority is_superuser %}ID{% endrestrict %}</th>
+        {% endif %}
+        <th>Submitted at</th>
+        {% if user_authority.can_review_submission %}
+        <th>{% restrict user_authority can_review_submission %}Submitted by{% endrestrict %}</th>
+        {% endif %}
+        <th>Submission style</th>
+        <th>Filename</th>
+        {% if not without_view or not without_download %}
+        <th>Link(s)</th>
+        {% endif %}
+    </tr>
+    {% for parcel in submission_parcels %}
+    <tr>
+        {% if user_authority.is_superuser %}
+        <td>{% restrict user_authority is_superuser %}{{ parcel.id }}{% endrestrict %}</td>
+        {% endif %}
+        <td>{{ parcel.submitted_at|date:'Y-m-d H:i:s' }}</td>
+        {% if user_authority.can_review_submission %}
+        <td>{% restrict user_authority can_review_submission %}{{ parcel.submitted_by.username }}{% endrestrict %}</td>
+        {% endif %}
+        {% if parcel.submission_colaboratory_url %}
+        <td><a href="{{ parcel.submission_colaboratory_url | safe }}">Colaboratory</a></td>
+        {% else %}
+        <td>File upload</td>
+        {% endif %}
+        <td>{{ parcel.submission_parcel_file_initial_name }}
+        {% if not without_view or not without_download %}
+        <td>
+            {% if not without_view %}
+                <a href={% url 'submission_parcel/view' o_name=organization.name c_name=course.name sp_eb64=course|encode_submission_parcel_id:parcel.id %}>Detail</a>
+            {% endif %}
+            {% if not without_download %}
+                <a href={% url 'submission_parcel/download' o_name=organization.name c_name=course.name sp_eb64=course|encode_submission_parcel_id:parcel.id %}>Download</a>
+            {% endif %}
+        </td>
+        {% endif %}
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+No Submissions.
+{% endif %}

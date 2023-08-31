@@ -1,0 +1,52 @@
+<h2>Profile of [{{ target_user.username }}]</h2>
+
+<table class="data_list">
+    <tr>
+        <th>E-mail</th>
+        <td>{{ target_user.email }}</td>
+    </tr>
+    <tr>
+        <th>Full name</th>
+        <td>{{ target_user.full_name }}</td>
+    </tr>
+    {% if target_user.student_card_number %}
+    <tr>
+        <th>Student card number</th>
+        <td>{{ target_user.student_card_number }}</td>
+    </tr>
+    {% endif %}
+    <tr>
+        <th>Joined at</th>
+        <td>{{ target_user.joined_at|date:'Y-m-d H:i:s' }}</td>
+    </tr>
+    <tr>
+        <th>Username</th>
+        <td>{{ target_user.username }}</td>
+    </tr>
+    {% comment %} <tr> {% endcomment %}
+        {% comment %} <th>Time Zone</th> {% endcomment %}
+        {% comment %} <td>{{ target_user.timezone }}</td> {% endcomment %}
+    {% comment %} </tr> {% endcomment %}
+    {% if user_authority.can_manage_user %}
+    <tr>
+        <th>{% restrict user_authority can_manage_user %}ID{% endrestrict %}</th>
+        <td>{% restrict user_authority can_manage_user %}{{ target_user.id }}{% endrestrict %}</td>
+    </tr>
+    <tr>
+        <th>{% restrict user_authority can_manage_user %}Active{% endrestrict %}</th>
+        <td>{% restrict user_authority can_manage_user %}{{ target_user.is_active|yesno }}{% endrestrict %}</td>
+    </tr>
+    {% if target_user.is_staff %}
+    <tr>
+        <th>{% restrict user_authority can_manage_user %}Are you a staff?{% endrestrict %}</th>
+        <td>{% restrict user_authority can_manage_user %}{{ target_user.is_staff|yesno }}{% endrestrict %}</td>
+    </tr>
+    {% endif %}
+    {% if target_user.is_superuser %}
+    <tr>
+        <th>{% restrict user_authority can_manage_user %}Are you a superuser?{% endrestrict %}</th>
+        <td>{% restrict user_authority can_manage_user %}{{ target_user.is_superuser|yesno }}{% endrestrict %}</td>
+    </tr>
+    {% endif %}
+    {% endif %}
+</table>

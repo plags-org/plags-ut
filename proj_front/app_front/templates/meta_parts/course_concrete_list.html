@@ -1,0 +1,26 @@
+{% if course_concretes %}
+<table class="data_list">
+    <tr>
+        {% if user_authority.can_edit_organization %}
+        <th>{% restrict user_authority can_edit_organization %}ID{% endrestrict %}</th>
+        {% endif %}
+        <th>Name</th>
+        <th>Internal version (directory hash)</th>
+        <th>Created at</th>
+        <th>Created by</th>
+    </tr>
+    {% for course_concrete in course_concretes %}
+    <tr>
+        {% if user_authority.can_edit_organization %}
+        <td>{% restrict user_authority can_edit_organization %}{{ course_concrete.id }}{% endrestrict %}</td>
+        {% endif %}
+        <th><a href={% url 'course_concrete/view' o_name=organization.name cc_name=course_concrete.name cc_hash=course_concrete.version %}>{{ course_concrete.name }}</a></th>
+        <td>{{ course_concrete.version }}</td>
+        <td>{{ course_concrete.created_at|date:'Y-m-d H:i:s' }}</td>
+        <td>{{ course_concrete.created_by.username }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+No CourseConcretes.
+{% endif %}

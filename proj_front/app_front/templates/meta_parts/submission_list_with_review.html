@@ -1,0 +1,77 @@
+{# param: user: default #}
+{# param: user_authority: annexed by default #}
+{# param: submissions: iterable of model.Submission #}
+
+{% if submissions %}
+<table class="data_list">
+    <tr>
+        {% if user_authority.is_superuser %}
+        <th>{% restrict user_authority is_superuser %}ID{% endrestrict %}</th>
+        {% endif %}
+        <th>Exercise</th>
+        <th>Submitted at</th>
+        {% if user_authority.can_review_submission %}
+        <th>{% restrict user_authority can_review_submission %}Submitted by{% endrestrict %}</th>
+        {% endif %}
+        {% if user_authority.is_superuser %}
+        <th>{% restrict user_authority is_superuser %}Submission format{% endrestrict %}</th>
+        {% endif %}
+        <th>Score</th>
+        <th>Comment</th>
+        {% if user_authority.can_review_submission %}
+        <th>{% restrict user_authority can_review_submission %}Confirmed{% endrestrict %}</th>
+        <th>{% restrict user_authority can_review_submission %}Remarks{% endrestrict %}</th>
+        {% comment %} <th>{% restrict user_authority can_review_submission %}ReviewAssigned{% endrestrict %}</th> {% endcomment %}
+        {% endif %}
+        <th>Link</th>
+    </tr>
+    {% for submission in submissions %}
+    <tr>
+        {% if user_authority.is_superuser %}
+        <td>{% restrict user_authority is_superuser %}{{ submission.id }}{% endrestrict %}</td>
+        {% endif %}
+        <td>{{ submission.exercise.name }}</td>
+        <td>{{ submission.submitted_at|date:'Y-m-d H:i:s' }}</td>
+        {% if user_authority.can_review_submission %}
+        <td>{% restrict user_authority can_review_submission %}{{ submission.submitted_by.username }}{% endrestrict %}</td>
+        {% endif %}
+        {% if user_authority.is_superuser %}
+        <td>{% restrict user_authority is_superuser %}{{ submission.submission_format }}{% endrestrict %}</td>
+        {% endif %}
+        <td>
+            {% comment %} スコアが学生に対して公開されており、confirmedである場合のみ、学生に見せてしてよい {% endcomment %}
+            {% if submission.exercise__calculated_score_visible_from <= "30_student" and submission.is_lecturer_evaluation_confirmed %}
+                {{ submission.lecturer_grade|render_score }}
+            {% else %}
+                -
+            {% endif %}
+        </td>
+        <td>{% if submission.is_lecturer_evaluation_confirmed %}{{ submission.lecturer_comment|string_thumbnail:8 }}{% else %}-{% endif %}</td>
+        {% if user_authority.can_review_submission %}
+        <td>{% restrict user_authority can_review_submission %}{% if submission.is_lecturer_evaluation_confirmed %}ok{% endif %}{% endrestrict %}</td>
+        <td>{% restrict user_authority can_review_submission %}
+            {% comment %} Remarks の閲覧権限がある場合のみ、reviewer に公開して良い {% endcomment %}
+            {% if submission.exercise__calculated_remarks_visible_from <= user_authority.on_course %}{% if submission.reviewer_remarks %}✔{% endif %}{% else %}(sealed){% endif %}
+            {% endrestrict %}
+        </td>
+        {% endif %}
+        <td>
+            <a href="{% url 'submission/view' o_name=organization.name c_name=course.name s_eb64=course|encode_submission_id:submission.id %}">Detail</a>
+        </td>
+    </tr>
+    <tr>
+        {% if user_authority.is_superuser %}
+        <td colspan="10">
+        {% elif user_authority.can_review_submission %}
+        <td colspan="8">
+        {% else %}
+        <td colspan="5">
+        {% endif %}
+        {% include "meta_parts/lecturer_grade_comment.html" with submission=submission %}
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+No Submission to Exercises.
+{% endif %}

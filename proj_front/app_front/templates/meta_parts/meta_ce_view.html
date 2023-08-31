@@ -1,0 +1,74 @@
+{% comment %} lazy_load: APIを経由してconcreteを取得する場合、初回レンダリング時には動作させない {% endcomment %}
+{% comment %} without_edit_link: 作成ボタンへのリンクを表示するかどうか（courseのみ） {% endcomment %}
+
+<div class="view_meta_ce">
+    {% comment %} TODO 権限と時間制限についての扱いの違いを別の見た目の枠で表現する {% endcomment %}
+    {% if meta_ce_type == 'course' %}
+        {% if user_authority.can_view_course %}
+            {% include 'meta_parts/meta_ce_concrete_view.html' with meta_ce_type=meta_ce_type meta_ce_info=meta_ce_info lazy_load=lazy_load %}
+        {% elif user_authority.can_view_course_published %}
+            {% include 'meta_parts/meta_ce_concrete_view.html' with meta_ce_type=meta_ce_type meta_ce_info=meta_ce_info lazy_load=lazy_load %}
+        {% endif %}
+    {% elif meta_ce_type == 'exercise' %}
+        {% if user_authority.can_view_exercise %}
+            {% include 'meta_parts/meta_ce_concrete_view.html' with meta_ce_type=meta_ce_type meta_ce_info=meta_ce_info lazy_load=lazy_load %}
+        {% elif user_authority.can_view_exercise_until_end and not meta_ce_info.setting.ends %}
+            {% include 'meta_parts/meta_ce_concrete_view.html' with meta_ce_type=meta_ce_type meta_ce_info=meta_ce_info lazy_load=lazy_load %}
+        {% elif user_authority.can_view_exercise_published and meta_ce_info.setting.begins_to_ends %}
+            {% include 'meta_parts/meta_ce_concrete_view.html' with meta_ce_type=meta_ce_type meta_ce_info=meta_ce_info lazy_load=lazy_load %}
+        {% endif %}
+    {% endif %}
+
+    {% if meta_ce_info.setting %}
+    <div class="view_float_tag_field">
+        {% if meta_ce_type == 'exercise' %}
+            {% restrict user_authority can_edit_course div class view_float_tag_left %}
+            <div class="view_float_tag_left boundaries_begins_at">{{ meta_ce_info.setting.calculated_begins_at|date:'Y-m-d H:i:s' }}</div>
+            {% endrestrict %}
+            <div class="view_float_tag_left boundaries_opens_at">{{ meta_ce_info.setting.calculated_opens_at|date:'Y-m-d H:i:s' }}</div>
+            {% if meta_ce_type == 'exercise' and meta_ce_info.setting.calculated_checks_at %}
+            <div class="view_float_tag_left boundaries_checks_at">{{ meta_ce_info.setting.calculated_checks_at|date:'Y-m-d H:i:s' }}</div>
+            {% endif %}
+            <div class="view_float_tag_left boundaries_closes_at">{{ meta_ce_info.setting.calculated_closes_at|date:'Y-m-d H:i:s' }}</div>
+            {% restrict user_authority can_edit_course div class view_float_tag_left %}
+            <div class="view_float_tag_left boundaries_ends_at">{{ meta_ce_info.setting.calculated_ends_at|date:'Y-m-d H:i:s' }}</div>
+            {% endrestrict %}
+        {% endif %}
+
+        {% if meta_ce_type == 'course' and not without_edit_link %}
+            <a style="float: right; padding-top: 4px;" href={% url 'course/description_edit' o_name=organization.name c_name=meta_ce_info.setting.name %}>
+                {% restrict user_authority can_edit_course span %}
+                    <i class="fas fa-edit"></i>
+                {% endrestrict %}
+            </a>
+        {% endif %}
+
+        <div class="view_float_tag_right datetime_edited_at">{{ meta_ce_info.setting.edited_at|date:'Y-m-d H:i:s' }}</div>
+    </div>
+    {% endif %}
+    {% if meta_ce_type == 'exercise' and submit_editor_form %}
+    <form id="view_meta_ce_submission_form__{{ meta_ce_info.setting.name }}" method="post">
+        {% csrf_token %}
+        {{ submit_editor_form }}
+        <p>ATTENTION: Submissions to this form are NOT to be reviewed or evaluated for grading. This form experimentally offers an alternative to check your answer to an exercise personally after the deadline.</p>
+        <div class="view_exercise_submit">
+            <button type="submit" class="btn btn-primary">TRY CHECK</button>
+        </div>
+    </form>
+    <script>
+        $(function () {
+            var editor_options = "{{ meta_ce_info.setting.trial_editor_options|escapejs }}";
+            editor_options = editor_options == "None" ? null : JSON.parse(editor_options);
+            var initial_source = "{{ meta_ce_info.setting.trial_initial_source|escapejs }}";
+            initial_source = initial_source == "" ? "# Put your code here." : initial_source;
+            update_source_on_codemirror(
+                'id_view_exercise_concrete_editor__{{ meta_ce_info.setting.name }}',
+                editor_options,
+                initial_source,
+            );
+            {% comment %} this is for C {% endcomment %}
+            {% comment %} update_source_on_codemirror('id_view_exercise_concrete_editor__{{ meta_ce_info.setting.name }}', "text/x-csrc", "// Put your code here."); {% endcomment %}
+        });
+    </script>
+    {% endif %}
+</div>

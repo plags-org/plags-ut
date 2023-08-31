@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% include 'meta_parts/diagram.html' %}
+
+<hr />
+<h2>[{{ course.title }}]</h2>
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <h3>Upload file to extension [{{ extension_name }}]</h3>
+    {{ upload_file_form.as_p }}
+    <button type="submit" class="significant_button">Submit</button>
+</form>
+
+{% if error_message %}
+<hr />
+<details open>
+    <summary>Error message for previous upload:</summary>
+    <div class="result_output">{{ error_message }}</div>
+</details>
+{% endif %}
+
+{% endblock %}

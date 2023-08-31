@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% include 'meta_parts/diagram.html' %}
+
+<hr >
+<h2>Create course</h2>
+<form method="post">
+    {% csrf_token %}
+    <h3>Course Settings</h3>
+    {{ form.as_p }}
+    <button type="submit">Create</button>
+</form>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Transitory Users{% endblock %}
+
+{% block content %}
+{% include "meta_parts/diagram.html" %}
+
+<h2>Transitory Users</h2>
+{% if organization %}
+<a href={% url 'organization_manager/user/create' o_name=organization.name %}>CREATE NEW USER</a>
+{% else %}
+{% restrict user_authority is_superuser %}
+<a href={% url 'user/create' %}>CREATE NEW USER</a>
+{% endrestrict %}
+{% endif %}
+
+{% comment %} TODO こういうところで概念説明しているとよいね {% endcomment %}
+
+{% include "meta_parts/transitory_user_list.html" %}
+
+{% endblock %}

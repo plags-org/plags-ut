@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Send Mail (Bulk){% endblock %}
+
+{% block content %}
+{% include "meta_parts/diagram.html" %}
+
+{% if user_authority.is_superuser %}
+<h2>Send Mail (Bulk)</h2>
+
+<p>Available template variables:</p>
+<ul>
+    <li><code>{email}</code>: User email</li>
+</ul>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Send</button>
+</form>
+
+{% endif %}
+{% endblock %}

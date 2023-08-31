@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+
+{% block title %}Course - [{{ organization.name }} / {{ course.title }}]{% endblock %}
+
+{% block content %}
+{% include "meta_parts/diagram.html" %}
+
+{% if course_top_notice_by_organization_list %}
+<div style="margin: 16px 0px; border: 4px ridge grey; padding: 8px 8px 4px 8px">
+    {% for ctn in course_top_notice_by_organization_list %}
+    <details style="padding: 8px 16px">
+    <summary style="display: flex">
+    <div style="text-align: center; width: 100%;"><span style="font-size: 1.5em;">{{ ctn.title }}</span></div>
+    </summary>
+    <hr />
+    {{ ctn.text|safe }}
+    </details>
+    {% endfor %}
+    {% restrict user_authority can_edit_course %}
+    <span><strong>NOTE:</strong> Notice(s) above is set by organization managers.</span>
+    {% endrestrict %}
+</div>
+{% endif %}
+
+{% restrict user_authority can_edit_course %}
+<div style="display: flex; align-items: center;">
+    <a class="inline_link" href={% url 'course/edit' o_name=organization.name c_name=course.name %}>Setting</a>
+    {% comment %} TODO 条件をUI上で表現する {% endcomment %}
+    {% if course.is_registerable %}
+        <a class="inline_link" href={% url 'course/register' o_name=organization.name c_name=course.name %}>Course registration</a>
+    {% endif %}
+    {% restrict user_authority can_view_async_job_history %}
+    <a class="inline_link" href={% url 'course/async_job/list' o_name=organization.name c_name=course.name %}>Job history</a>
+    {% endrestrict %}
+    {% restrict user_authority can_view_course_operation_log %}
+    <a class="inline_link" href={% url 'operation_log/course_faculty/list' o_name=organization.name c_name=course.name %}>Operation log</a>
+    {% endrestrict %}
+</div>
+{% endrestrict %}
+
+{% restrict user_authority is_superuser %}
+{% include 'meta_parts/course_list.html' with courses=course|to_one_element_list %}
+{% endrestrict %}
+
+{% include 'meta_parts/meta_ce_view.html' with meta_ce_type='course' meta_ce_info=course_info %}
+
+{% if answer_submit_form %}
+<hr />
+{% include "meta_parts/exercise_submission_form.html" with form=answer_submit_form with_history_link=True %}
+{% endif %}
+
+<hr />
+<h2>Exercises:</h2>
+
+<div style="display: flex; align-items: center; padding-bottom: 8px;">
+{% restrict user_authority can_edit_course %}
+{% with is_latest=True %}
+<a class="inline_link" href="{% url 'submission/list_export' o_name=organization.name c_name=course.name %}?{{ 'submitted_by:(current-student) latest:true'|to_submission_filter_query_url_param }}">Export review records</a>
+{% endwith %}
+{% endrestrict %}
+<a class="inline_link" href="{% url 'submission/dashboard' o_name=organization.name c_name=course.name %}">Review summary</a>
+<a class="inline_link" href="{% url 'submission/list' o_name=organization.name c_name=course.name %}?{{ "submitted_by:(self)"|to_submission_filter_query_url_param }}">All your submissions</a>
+</div>
+
+<table class="data_list">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Deadline Status <span data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" title="Begin: Become visible（課題公開）<br />Open: Open for submissions（投稿開始）<br />Check: Accept as delayed after this（標準締切）<br />Close: Deadline for submissions（最終締切）<br />End: Become invisible（公開終了）"><i class="fas fa-question-circle"></i></span></th>
+            <th>Answer form</th>
+            <th>Your Last Submission</th>
+            <th>Link(s)</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for exercise_info in exercise_info_list %}
+        <tr {% if exercise_info.setting.is_draft %}class="exercise_in_draft_mode" data-bs-toggle="tooltip" data-bs-placement="left" title="Draft mode"{% endif %}>
+            <td>
+                <div style="display: flex">
+                <p style="flex-grow: 1"><a id="id_exercise__{{ exercise_info.setting.name }}" class="open_modal_link exercise__open_detail_modal" data-exercise-name="{{ exercise_info.setting.name }}">
+                    <i class="fas fa-book-open"></i>
+                    {{ exercise_info.concrete_cache_docs|dict_get:exercise_info.setting.default_lang_i18n|dict_get:'title' }}
+                </a></p>
+                {% if user_authority.can_edit_exercise %}
+                <a style="display: flex" href="{% url 'exercise/edit' o_name=organization.name c_name=course.name e_name=exercise_info.setting.name %}">
+                    {% restrict user_authority can_edit_exercise span %}
+                    <i class="fas fa-edit"></i>
+                    {% endrestrict %}
+                </a>
+                {% endif %}
+                </div>
+            </td>
+            <td>
+                <div style="display: flex">
+                <div style="flex-grow: 1">
+                    {% for status in exercise_info.setting|get_deadline_status:user_authority %}
+                        {% if not forloop.first %}<br />{% endif %}
+                        {% if status.1 %}
+                            <b>{{ status.0 }}</b>: {{ status.1|date:'Y-m-d H:i:s' }}
+                        {% else %}
+                            <b>{{ status.0 }}</b>
+                        {% endif %}
+                    {% endfor %}
+                    <span data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" title="
+                    <b>Open</b>: {{ exercise_info.setting.calculated_opens_at|date:'Y-m-d H:i:s' }}<br />
+                    {% if exercise_info.setting.calculated_checks_at %}
+                    <b>Check</b>: {{ exercise_info.setting.calculated_checks_at|date:'Y-m-d H:i:s' }}<br />
+                    {% endif %}
+                    <b>Close</b>: {{ exercise_info.setting.calculated_closes_at|date:'Y-m-d H:i:s' }}<br />
+                    <b>End</b>: {{ exercise_info.setting.calculated_ends_at|date:'Y-m-d H:i:s' }}<br />
+                    ">
+                        <i class="fas fa-info-circle"></i>
+                    </span>
+                </div>
+                {% if user_authority.can_edit_exercise %}
+                <a style="display: flex" href="{% url 'exercise/edit' o_name=organization.name c_name=course.name e_name=exercise_info.setting.name %}">
+                    {% restrict user_authority can_edit_exercise span %}
+                    <i class="fas fa-edit"></i>
+                    {% endrestrict %}
+                </a>
+                {% endif %}
+                </div>
+            </td>
+            <td>
+                <div style="display: flex">
+                <div style="flex-grow: 1">
+                {% if exercise_info.setting.drive_resource_id %}
+                    <a href="https://colab.research.google.com/drive/{{ exercise_info.setting.drive_resource_id }}" target="_blank" rel="external noopener noreferrer">
+                        <img src="https://colab.research.google.com/assets/colab-badge.svg"></img>
+                    </a>
+                {% endif %}
+                </div>
+                {% if user_authority.can_edit_exercise %}
+                <a style="display: flex" href="{% url 'exercise/edit' o_name=organization.name c_name=course.name e_name=exercise_info.setting.name %}">
+                    {% restrict user_authority can_edit_exercise span %}
+                    <i class="fas fa-edit"></i>
+                    {% endrestrict %}
+                </a>
+                {% endif %}
+                </div>
+            </td>
+            <td>
+                {% with submission=exercise_submissions|dict_get:exercise_info.setting.name %}
+                {% if submission %}
+                    {% if exercise_info.setting.is_autograde %}
+                    {{ submission.overall_status|status_as_html }} at {{ submission.submitted_at|date:'Y-m-d H:i:s' }}
+                    {% else %}
+                    {{ 'A'|status_as_html }} at {{ submission.submitted_at|date:'Y-m-d H:i:s' }}
+                    {% endif %}
+                    <a class="inline_link" href={% url 'submission/view' o_name=organization.name c_name=course.name s_eb64=course|encode_submission_id:submission.id %}>Detail</a>
+                {% else %}
+                    No submission
+                {% endif %}
+                {% endwith %}
+            </td>
+            <td {% if exercise_info.setting.calculated_is_shared_after_confirmed %}class="exercise_shared_after_confirmed" data-bs-toggle="tooltip" data-bs-placement="top" title="Shared after Confirmed"{% endif %}>
+                <div style="display: flex">
+                <div style="flex-grow: 1">
+                    {% if user_authority.can_list_submission %}
+                    {% with is_latest=user_authority.can_review_submission %}
+                    <a class="inline_link" href="{% url 'submission/list' o_name=organization.name c_name=course.name %}?{{ exercise_info.setting|build_submission_query_filter_by_exercise:is_latest|to_submission_filter_query_url_param }}">Submissions</a>
+                    {% endwith %}
+                    {% endif %}
+                    {% comment %} トライアル提出の可否判定 {% endcomment %}
+                    {% if exercise_info.setting|is_trial_on_exercise_allowed:user_authority %}
+                    <a class="inline_link" href="{% url 'exercise/view' o_name=organization.name c_name=course.name e_name=exercise_info.setting.name %}">Trial</a>
+                    {% endif %}
+                </div>
+                {% if user_authority.can_edit_course %}
+                <a style="display: flex" href="{% url 'submission/full_export' o_name=organization.name c_name=course.name e_name=exercise_info.setting.name %}">
+                    {% restrict user_authority can_edit_course span %}
+                    <span data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" title="Full export (JSON)">
+                        <i class="fas fa-file-download"></i>
+                    </span>
+                    {% endrestrict %}
+                </a>
+                {% endif %}
+                </div>
+            </td>
+        </tr>
+        {% empty %}
+        No exercises.
+        {% endfor %}
+    </tody>
+</table>
+
+{% comment %} 課題毎の Modal を生成して隠しておく {% endcomment %}
+<div id="modal-bg" style="display:none; z-index:1; width:100%; height:100%; background-color:rgba(0,0,0,0.25); position:fixed; top:0; left:0;"></div>
+{% for exercise_info in exercise_info_list %}
+<div id="id_exercise__{{ exercise_info.setting.name }}__detail_modal" style="display:none; z-index:2; background-color:white; border: 2px grey solid; overflow-y:scroll;">
+    <div style="width:100%; text-align:center"><a class="wide_link exercise__close_detail_modal">CLOSE</a></div>
+    {% include 'meta_parts/meta_ce_view.html' with meta_ce_type='exercise' meta_ce_info=exercise_info lazy_load=True %}
+    <div style="width:100%; text-align:center"><a class="wide_link exercise__close_detail_modal">CLOSE</a></div>
+</div>
+{% endfor %}
+
+{% comment %} Modalの出し消し {% endcomment %}
+<script>
+$(function(){
+    $(".exercise__open_detail_modal").click(function (event) {
+        var targetMoalElementSelector = "#" + event.target.id + "__detail_modal";
+        var margin = 128;
+        $(targetMoalElementSelector).css({
+            "position": "fixed",
+            "left": margin + "px",
+            "top": margin + "px",
+            "width": ($("#modal-bg").outerWidth() - 2 * margin) + "px",
+            "height": ($("#modal-bg").outerHeight() - 2 * margin) + "px",
+        });
+        {% comment %} defined in app_front/templates/meta_parts/meta_ce_concrete_view.html {% endcomment %}
+        var exerciseName = event.target.dataset.exerciseName;
+        renderExerciseNotebookViaAPI(
+            "{{ organization.name }}",
+            "{{ course.name }}",
+            exerciseName,
+            `view_exercise_concrete_jupyter_notebook_content__${exerciseName}__preview`,
+        );
+        $("#modal-bg," + targetMoalElementSelector).fadeIn(250, function () {
+            function closeModal () {
+                $("#modal-bg," + targetMoalElementSelector).css({
+                    "display": "none",
+                });
+            }
+            $("#modal-bg").click(closeModal);
+        });
+    });
+    $(".exercise__close_detail_modal").click(function () {
+        $(this).parent().parent().css({ "display": "none" });
+        $("#modal-bg").css({ "display": "none" });
+    });
+});
+</script>
+
+{% restrict user_authority can_create_exercise %}
+{% comment %} <a class="inline_link" href={% url 'exercise/create' o_name=organization.name c_name=course.name %}>CREATE EXERCISE</a> {% endcomment %}
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <h3>Upload exercise configuration</h3>
+    <table class="table_form">
+        <colgroup>
+            <col span="1" style="width: 20%;">
+            <col span="1" style="width: 80%;">
+        </colgroup>
+        {{ exercise_upload_form.as_table }}
+    </table>
+    <button type="submit" name="exercise_upload" class="btn btn-primary">Upload</button>
+</form>
+{% endrestrict %}
+{% restrict user_authority can_edit_course %}
+<details>
+    <summary>[[ Exercise Metadata ]]</summary>
+    {% include 'meta_parts/exercise_list.html' with exercises=exercises without_edit=True %}
+</details>
+{% endrestrict %}
+<hr />
+
+{% restrict user_authority can_edit_course %}
+<hr />
+<h2>Manage Course Users:</h2>
+<a class="inline_link" href={% url 'course_user/manage' o_name=organization.name c_name=course.name %}>Manage Course Users</a>
+{% endrestrict %}
+
+{% endblock %}

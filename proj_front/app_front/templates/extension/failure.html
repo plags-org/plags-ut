@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Failure in extension - [{{ organization.name }}]{% endblock %}
+
+{% block content %}
+{% include 'meta_parts/diagram.html' %}
+
+<hr />
+<details open>
+    <summary>Error message for previous execution of extension {{ extension_name }}:</summary>
+    <div class="result_output">{{ error_message }}</div>
+</details>
+
+{% endblock %}

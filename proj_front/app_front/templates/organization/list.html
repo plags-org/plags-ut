@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title %}Organizations{% endblock %}
+
+{% block content %}
+{% include "meta_parts/diagram.html" %}
+
+<h2>Organizations</h2>
+
+{% include 'meta_parts/organization_list.html' with organizations=organizations %}
+
+{% endblock %}

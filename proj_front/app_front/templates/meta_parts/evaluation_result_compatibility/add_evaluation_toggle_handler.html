@@ -1,0 +1,22 @@
+<script>
+  function updateLabelPrefix (inputElm, isVisible) {
+    const labelElm = inputElm.prev();
+    const labelText = labelElm.text();
+    const labelClose = labelText.indexOf("]") + 1 || -1;
+    const newLabelText = (isVisible ? "[ - ] " : "[ + ] ") + labelText.substring(labelClose + 1);
+    labelElm.text(newLabelText);
+  }
+
+  $(document).ready(function () {
+    $('[data-bs-toggle="toggle"]').each(function (_i, elm) {
+      const inputElm = $(elm);
+      const isVisible = inputElm.parents().next(".hide").toggle(elm.checked).is(":visible");
+      updateLabelPrefix(inputElm, isVisible);
+    });
+    $('[data-bs-toggle="toggle"]').change(function (event) {
+      const inputElm = $(event.target);
+      const isVisible = inputElm.parents().next(".hide").toggle().is(":visible");
+      updateLabelPrefix(inputElm, isVisible);
+    });
+  });
+</script>

@@ -1,0 +1,15 @@
+{# param[str]: state: state名 #}
+{# param[str]: state_result: state結果 内容はrunner依存 #}
+
+{% if state_result.runner.name == 'test_runner_py37_unittest.py' %}
+{% include 'meta_parts/state_runner_compatibility/py37_unittest.html' %}
+{% elif state_result.runner.name == 'test_runner_py37_unittest_v2.py' %}
+{% include 'meta_parts/state_runner_compatibility/py37_unittest_v2.html' %}
+{% elif state_result.runner.name == 'test_runner_py37_unittest_v3.py' %}
+{% include 'meta_parts/state_runner_compatibility/py310_unittest.html' %}
+{% elif state_result.runner.name == 'test_runner_py310_unittest.py' %}
+{% include 'meta_parts/state_runner_compatibility/py310_unittest.html' %}
+{% else %}
+{% comment %} まだそんなものはないがとりあえず v2 で代用 {% endcomment %}
+{% include 'meta_parts/state_runner_compatibility/py37_unittest_v2.html' %}
+{% endif %}

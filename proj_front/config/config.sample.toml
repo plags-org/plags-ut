@@ -1,0 +1,53 @@
+[DJANGO_SETTING]
+# secret key. 50 random character.
+SECRET_KEY = "TODO safely generate 50byte string"
+# debug flag. true: on, false: off.
+DEBUG = false
+# staging flag. true: on, false: off.
+STAGING = false
+# is_local flag. true: on, false: off.
+IS_LOCAL = true
+# sandbox directory; empty means "no sandbox"
+SANDBOX_DIR = ""
+# software name.
+SOFTWARE_NAME = "PLAGS UT"
+# server hostname.
+SERVER_HOSTNAME = "judge.plags.example.com"
+# Alternative server hostname list.
+ALTERNATIVE_SERVER_HOSTNAME_LIST = []
+
+[APP_SETTING]
+    [APP_SETTING.ADMINISTRATION]
+    data_migration_passphrase = "TODO data_migration_passphrase"
+    send_mail_bulk_passphrase = "TODO send_mail_bulk_passphrase"
+
+    [APP_SETTING.GOOGLE_AUTH]
+    client_id = "TODO"
+    client_secrets_file = "config/google_auth/TODO"
+    hosted_domain = "TODO"
+
+    [APP_SETTING.GOOGLE_DRIVE]
+    FILE_DOWNLOAD_METHOD = "API_SERVICE_CREDENTIAL"
+    FILE_DOWNLOAD_METHOD_FALLBACKS = ["API_TOKEN", "REQUESTS"]
+
+    [APP_SETTING.JUDGE]
+    ENDPOINT_URL = "TODO"
+    API_TOKEN = "TODO"
+
+    [APP_SETTING.SYSTEM_MAIL]
+        [APP_SETTING.SYSTEM_MAIL.GOOGLE_GMAIL_API]
+        client_id = "TODO"
+        client_secrets_file = "config/google_gmail/TODO"
+
+        [APP_SETTING.SYSTEM_MAIL.REDIRECT_TO_SYSTEM_NOTIFICATION]
+        enable = false
+        # enable = true
+        # method = "SLACK"
+
+    [APP_SETTING.SYSTEM_NOTIFICATION]
+
+        [APP_SETTING.SYSTEM_NOTIFICATION.SLACK]
+        # slack webhook url for error notification
+        webhook_url = "https://hooks.slack.com/services/TODO"
+        # slack channel name for error notification
+        channel_name = "#some-channel-TODO"

@@ -1,0 +1,60 @@
+{# param[List[CourseInfo]]: course_top_notice_by_organization_list #}
+{# param: user_authority #}
+
+{% if course_top_notice_by_organization_list %}
+{% for ctn in course_top_notice_by_organization_list %}
+    <table class="data_list">
+        <tr>
+            {% if user_authority.is_superuser %}
+            <th>{% restrict user_authority is_superuser %}ID{% endrestrict %}</th>
+            {% endif %}
+            <th>Visible to course users</th>
+            <th>Target courses</th>
+            <th>Excluded courses</th>
+            <th>Added at</th>
+            <th>Added by</th>
+            <th>Last edit at</th>
+            <th>Last edit by</th>
+            <th>Actions</th>
+        </tr>
+        <tr>
+            {% if user_authority.is_superuser %}
+            <td>{% restrict user_authority is_superuser %}{{ ctn.id }}{% endrestrict %}</td>
+            {% endif %}
+            <td>{% if ctn.is_public_to_students %}✅{% else %}❌{% endif %}</td>
+            <td>
+                <ul>
+                {% for course in ctn.target_course_list %}
+                    <li><a href={% url 'course/top' o_name=organization.name c_name=course.name %}>{% firstof course.title course.name %}</a></li>
+                {% endfor %}
+                </ul>
+            </td>
+            <td>
+                <ul>
+                {% for course in ctn.excluded_course_list %}
+                    <li><a href={% url 'course/top' o_name=organization.name c_name=course.name %}>{% firstof course.title course.name %}</a></li>
+                {% endfor %}
+                </ul>
+            </td>
+            <td>{{ ctn.added_at|date:'Y-m-d H:i:s' }}</td>
+            <td>{{ ctn.added_by__username }}</td>
+            <td>{{ ctn.last_edited_at|date:'Y-m-d H:i:s' }}</td>
+            <td>{{ ctn.last_edited_by__username }}</td>
+            <td><a href="{% url 'course_top_notice_by_organization/edit' o_name=organization.name ctno_id=ctn.id %}">Edit</a></td>
+        </tr>
+    </table>
+    <div style="margin: 16px 0px; border: 4px ridge grey; padding: 8px 8px 4px 8px">
+        <details style="padding: 8px 16px">
+        <summary style="display: flex">
+        {% comment %} <div><h4 style="display:flex;justify-content:center;align-items:center">{{ course.feature_course_top_notice_title }}</h4></div> {% endcomment %}
+        <div style="text-align: center; width: 100%;"><span style="font-size: 1.5em;">{{ ctn.title }}</span></div>
+        </summary>
+        <hr />
+        {{ ctn.text|safe }}
+        </details>
+    </div>
+    <hr />
+{% endfor %}
+{% else %}
+No notices.
+{% endif %}

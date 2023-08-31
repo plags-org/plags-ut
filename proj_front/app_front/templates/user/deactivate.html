@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}Deactivate User{% endblock %}
+
+{% block content %}
+{% include "meta_parts/diagram.html" %}
+
+<h2>Deactivate User</h2>
+
+{% restrict user_authority is_superuser %}
+<hr />
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Deactivate</button>
+</form>
+
+<hr>
+<h3>Current Users:</h3>
+{% include 'meta_parts/user_list.html' %}
+{% endrestrict %}
+{% endblock %}

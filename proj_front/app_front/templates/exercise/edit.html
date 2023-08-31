@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Exercise - [{{ organization.name }} / {{ course.title }} / {{ exercise.title }}]{% endblock %}
+
+{% block content %}
+{% include "meta_parts/diagram.html" %}
+
+<hr />
+<h2>Edit Exercise [ {{ exercise.title }} ( {{ exercise.name }} ) ]</h2>
+
+<form method="post">
+    {% csrf_token %}
+    <table class="table_form">
+        {{ form.as_table }}
+    </table>
+    <button type="submit" class="btn btn-primary">Update</button>
+</form>
+{% endblock %}

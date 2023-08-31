@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}Submission Logs - [{{ organization.name }} / {{ course.title }}]{% endblock %}
+
+{% block content %}
+{% include "meta_parts/diagram.html" %}
+
+{% if form %}
+{% include "meta_parts/exercise_submission_form.html" with form=form %}
+<hr />
+{% endif %}
+
+<h2>Submission Logs:</h2>
+Found {{ submission_parcels|length }} submission logs.
+{% include "meta_parts/submission_parcel_list.html" with submission_parcels=submission_parcels %}
+
+{% endblock %}

@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% include "meta_parts/diagram.html" %}
+
+<hr />
+<h2>Export review records on Course [{{ course.title }}], [{{ organization.name }}]</h2>
+
+{% restrict user_authority can_review_submission %}
+<hr />
+{% include "meta_parts/submission_filter.html" %}
+
+<hr />
+<div style="display: flex; align-items: center;">
+<button type="button" id="id_bulk_confirm_button" name="bulk_review" class="btn btn-primary" onclick="exportSubmission()">Export CSV</button>
+<p style="margin: auto 8px auto;">The review records (without submission contents) for all the matched submissions will be exported.</p>
+
+{% restrict user_authority can_confirm_submission %}
+<a style="float: right;" href="#" class="inline_link" id="id_move_to_list_page">List to review</a>
+{% endrestrict %}
+</div>
+
+<script>
+function applyFilter() {
+    try {
+        var queryParts = [];
+        queryParts.push("q=" + encodeURIComponent($("#id_submission_filter_input").val()));
+        location.assign(location.pathname + '?' + queryParts.join('&'));
+    } catch (e) {
+        console.error(e);
+        alert(`Error: ${e}`);
+    }
+}
+
+function setMoveToListPageURL () {
+    const query = getSubmissionFilterQueryFromURL();
+
+    var queryParts = [];
+    queryParts.push("q=" + encodeURIComponent(query));
+
+    const listPageURL = "{% url 'submission/list' o_name=organization.name c_name=course.name %}";
+    document.getElementById("id_move_to_list_page").href = listPageURL + '?' + queryParts.join('&');
+}
+document.addEventListener('DOMContentLoaded', setMoveToListPageURL);
+
+function setSubmissionExactMatchCount () {
+    const query = getSubmissionFilterQueryFromURL();
+    const elmSpinner = document.getElementById("id_loading_count")
+    console.log(elmSpinner);
+    elmSpinner.style.display = "";
+    const deferCall = () => { elmSpinner.style.display = "none"; };
+    callAPIPromise('{{ "/api/v0/o/{o_name}/c/{c_name}/submission/list_count/"|apply_o_name_to_url:organization|apply_c_name_to_url:course }}', {
+        query
+    }).then(response => {
+        deferCall();
+        document.getElementById("idExactMatchCount").innerText = `Exact count: ${response.data.count} submissions.`;
+    }).catch(error => {
+        deferCall();
+        document.getElementById("id_loading_count_failure").style.display = "";
+        console.error(error);
+        addErrorMessage(error.message);
+    });
+}
+{% if is_limit_triggered or is_too_many_rows_protection_triggered %}
+$(setSubmissionExactMatchCount);
+{% endif %}
+
+function exportSubmission () {
+    var submission_ids = {{ submission_ids }};
+    if (!submission_ids.length) {
+        alert('No submissions to export.');
+        return;
+    }
+
+    var btn = document.getElementById('id_bulk_confirm_button');
+    btn.disabled = true;
+    const deferRequest = () => {
+        btn.disabled = false;
+    };
+
+    var queryParts = [];
+    queryParts.push("q=" + encodeURIComponent(getSubmissionFilterQueryFromURL()));
+    const exportURL = "{% url 'submission/list_export_file' o_name=organization.name c_name=course.name %}" + '?' + queryParts.join('&');
+
+    fetch(exportURL)
+    .then(response => { return response.blob().then(blob => {
+        const contentDisposition = response.headers.get('content-disposition');
+        let filename = null;
+        // e.g. 'attachment; filename="foo.csv"'
+        if (contentDisposition) {
+            const match = contentDisposition.match(/; filename="(.+)"/);
+            console.log(match[1]);
+            filename = match[1];
+        }
+
+        return { filename, blob };
+    }) })
+    .then(({ filename, blob }) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        if (filename) a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        deferRequest();
+        addInfoMessage("Export successful.");
+    })
+    .catch((error) => {
+        deferRequest();
+        console.error(error);
+        addErrorMessage(error.message);
+    });
+}
+</script>
+{% endrestrict %}
+
+<hr />
+<h4>Submissions:</h4>
+<p>
+<div style="display=flex;">
+    <span>
+        Found
+        {% if is_too_many_rows_protection_triggered %}
+            {{ submissions|length }}+
+        {% else %}
+            {{ submissions|length }}
+        {% endif %}
+        submissions. ({{ elapse_seconds }} seconds)
+    </span>
+    {% if is_too_many_rows_protection_triggered %}
+        <span id="idExactMatchCount">Now calculating exact count ...</span>
+        <div id="id_loading_count" style="display: none; width: 1em; height: 1em;" class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <span style="margin-right: 4px; display: none;"
+            id="id_loading_count_failure"
+            data-bs-toggle="tooltip" data-bs-placement="top"
+            title="Failed to load exact match count."
+        ><i class="fas fa-exclamation-triangle"></i></span>
+    {% endif %}
+</div>
+
+{% if is_limit_triggered %}
+<b>NOTE: Due to specified filtering configuration, first {{ submissions|length }} rows are displayed.</b>
+{% endif %}
+{% if is_too_many_rows_protection_triggered %}
+<b>ATTENTION: Due to weak filtering configuration, first {{ submissions|length }} rows are displayed.</b>
+{% endif %}
+</p>
+{% include "meta_parts/submission_evaluation_list.html" with without_log=True %}
+{% endblock %}

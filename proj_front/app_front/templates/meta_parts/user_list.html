@@ -1,0 +1,75 @@
+{% restrict user_authority is_superuser %}
+<table class="data_list">
+    <tr>
+        {% if user_authority.is_superuser %}
+        <th>{% restrict user_authority is_superuser %}Id{% endrestrict %}</th>
+        {% endif %}
+        <th>Username</th>
+        <th>Is faculty</th>
+        <th>Card number</th>
+        <th>Full name</th>
+        <th>Joined at</th>
+        {% if user_authority.is_superuser %}
+        <th>{% restrict user_authority is_superuser %}Invited by{% endrestrict %}</th>
+        <th>{% restrict user_authority is_superuser %}Permitted{% endrestrict %}</th>
+        <th>{% restrict user_authority is_superuser %}Flags{% endrestrict %}</th>
+        <th>{% restrict user_authority is_superuser %}Time Zone{% endrestrict %}</th>
+        {% endif %}
+        <th>View</th>
+        {% comment %} {% if user_authority.is_superuser %} {% endcomment %}
+        {% comment %} <th>Edit</th> {% endcomment %}
+        {% comment %} <th>Add</th> {% endcomment %}
+        {% comment %} {% endif %} {% endcomment %}
+        <th>Email</th>
+        {% if user_authority.is_superuser %}
+        <th>
+            {% restrict user_authority is_superuser %}
+                Google OAuth2 <code>sub</code>
+                <a href="https://developers.google.com/identity/protocols/oauth2/openid-connect" target="_blank" rel="external noopener noreferrer"><i class="fas fa-external-link-alt"></i></a>
+            {% endrestrict %}
+        </th>
+        {% endif %}
+    </tr>
+    {% for u in users %}
+    <tr>
+        {% if user_authority.is_superuser %}
+        <td>{% restrict user_authority is_superuser %}{{ u.id }}{% endrestrict %}</td>
+        {% endif %}
+        <td><span class="possibly-long-single-word">{{ u.username }}</span></td>
+        <td>{{ u.is_faculty }}</td>
+        <td>{{ u.student_card_number }}</td>
+        <td><span class="possibly-long-single-word">{{ u.full_name }}</span></td>
+        <td>{{ u.joined_at|date:'Y-m-d H:i:s' }}</td>
+        {% if user_authority.is_superuser %}
+        <td>{% restrict user_authority is_superuser %}<span class="possibly-long-single-word">{{ u.invited_by.username }}</span>{% endrestrict %}</td>
+        <td>{% restrict user_authority is_superuser %}{{ u.is_active }}{% endrestrict %}</td>
+        <td>{% restrict user_authority is_superuser %}{{ u.is_superuser|yesno:'SU,' }} {{ u.is_staff|yesno:'staff,' }}{% endrestrict %}</td>
+        <td>{% restrict user_authority is_superuser %}{{ u.timezone }}{% endrestrict %}</td>
+        {% endif %}
+        <td><a href={% url 'user/profile' u_name=u.username %}>Profile</a></td>
+        {% comment %} {% if user_authority.is_superuser %} {% endcomment %}
+        {% comment %} <td></td> {% endcomment %}
+        {% comment %} <td></td> {% endcomment %}
+        {% comment %} {% endif %} {% endcomment %}
+        <td>
+            {% if u.email %}
+            <button data-bs-toggle="tooltip" data-bs-placement="top"
+                    title="{{ u.email }}"
+                    onclick="copyTextToClipboard('{{ u.email }}')">COPY</button>
+            {% else %}(none){% endif %}
+        </td>
+        {% if user_authority.is_superuser %}
+        <td>
+            {% restrict user_authority is_superuser %}
+            {% if u.google_id_info_sub %}
+            <button data-bs-toggle="tooltip" data-bs-placement="top"
+                    title="{{ u.google_id_info_sub }}"
+                    onclick="copyTextToClipboard('{{ u.google_id_info_sub }}')">COPY</button>
+            {% else %}(none){% endif %}
+            {% endrestrict %}
+        </td>
+        {% endif %}
+    </tr>
+    {% endfor %}
+</table>
+{% endrestrict %}

@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}Course - [{{ organization.name }} / {{ course.title }}]{% endblock %}
+
+{% block content %}
+{% include "meta_parts/diagram.html" %}
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <h3>Upload course settings JSON</h3>
+    <table class="table_form table_form_lined">
+        {{ form.as_table }}
+    </table>
+    <button type="submit" name="import_settings_verify" class="significant_button">Import settings (verify)</button>
+    {% comment %} <span style="padding: 0px 16px">=&gt;</span> {% endcomment %}
+    {% comment %} <button type="submit" name="import_settings_apply" class="significant_button">Import settings (apply)</button> {% endcomment %}
+</form>
+
+{% endblock %}

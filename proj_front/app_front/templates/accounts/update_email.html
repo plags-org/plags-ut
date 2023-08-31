@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Update Email{% endblock %}
+
+{% block content %}
+{% include "meta_parts/diagram.html" %}
+
+{% include 'meta_parts/user_info.html' with target_user=user %}
+
+<hr />
+
+{% if allow_update %}
+
+<form method="post">
+    {% if form_class.is_faculty %}
+    <h2>Step 1. Request your new email address</h2>
+    {% else %}
+    <h2>Step 1. Request your common ID number</h2>
+    {% endif %}
+    {% csrf_token %}
+    {{ request_form.as_p }}
+    <button type="submit" name="request" class="btn btn-primary">Request</button>
+</form>
+
+<hr />
+{% if form_class.is_faculty %}
+ATTENTION: Your email address will not be changed until you "Apply update" in "Step 2".
+{% else %}
+ATTENTION: Your common ID number will not be set until you "Apply update" in "Step 2".
+{% endif %}
+
+<form method="post">
+    {% if form_class.is_faculty %}
+    <h2>Step 2. Apply update on your email address</h2>
+    {% else %}
+    <h2>Step 2. Apply update on your common ID number</h2>
+    {% endif %}
+    {% csrf_token %}
+    {{ apply_update_form.as_p }}
+    <button type="submit" name="apply_update" class="btn btn-primary">Apply update</button>
+</form>
+
+{% else %}
+{% comment %} TEMPORARY 学生のメール更新が終わるまで、教員向けのアドレス更新を封印 {% endcomment %}
+{% if user.is_faculty %}
+Your are currently not allowed to update email. (This is currently only for students.)
+{% else %}
+Your email address is now <code>[common ID number]@g.ecc.u-tokyo.ac.jp</code> . No other email is permitted.
+{% endif %}
+{% endif %}
+
+{% endblock %}

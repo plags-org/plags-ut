@@ -1,0 +1,72 @@
+{# param[List[CourseInfo]]: courses #}
+{# param: user_authority #}
+{# param: without_create_link: Optional[bool] #}
+
+{% if not without_create_link %}
+{% restrict user_authority can_create_course %}
+<a class="inline_link" href={% url 'course/create' o_name=organization.name %}>Create Course</a>
+{% endrestrict %}
+{% endif %}
+
+{% if courses %}
+<table class="data_list">
+    <tr>
+        {% if user_authority.is_superuser %}
+        <th>{% restrict user_authority is_superuser %}ID{% endrestrict %}</th>
+        <th>{% restrict user_authority is_superuser %}Is active{% endrestrict %}</th>
+        {% endif %}
+        <th>Name</th>
+        {% if user_authority.can_edit_course %}
+        <th>{% restrict user_authority can_edit_course %}Created at{% endrestrict %}</th>
+        <th>{% restrict user_authority can_edit_course %}Created by{% endrestrict %}</th>
+        {% endif %}
+        <th>Registerable</th>
+        <th>Exercises Begin <span data-bs-toggle="tooltip" data-bs-placement="top" title="Of earliest exercise / Course default"><i class="fas fa-info-circle"></i></span></th>
+        <th>Exercises Open  <span data-bs-toggle="tooltip" data-bs-placement="top" title="Of earliest exercise / Course default"><i class="fas fa-info-circle"></i></span></th>
+        <th>Exercises Close <span data-bs-toggle="tooltip" data-bs-placement="top" title="Of latest exercise / Course default"><i class="fas fa-info-circle"></i></span></th>
+        <th>Exercises End   <span data-bs-toggle="tooltip" data-bs-placement="top" title="Of latest exercise / Course default"><i class="fas fa-info-circle"></i></span></th>
+        <th>Shared</th>
+        {% if user_authority.can_edit_course %}
+        <th>{% restrict user_authority can_edit_course %}Last edit at{% endrestrict %}</th>
+        <th>{% restrict user_authority can_edit_course %}Last edit by{% endrestrict %}</th>
+        {% endif %}
+    </tr>
+    {% for course in courses %}
+    <tr>
+        {% if user_authority.is_superuser %}
+        <td>{% restrict user_authority is_superuser %}{{ course.id }}{% endrestrict %}</td>
+        <td>{% restrict user_authority is_superuser %}{{ course.is_active }}{% endrestrict %}</td>
+        {% endif %}
+        <th><a href={% url 'course/top' o_name=organization.name c_name=course.name %}>{% firstof course.title course.name %}</a></th>
+        {% if user_authority.can_edit_course %}
+        <td>{% restrict user_authority can_edit_course %}{{ course.created_at|date:'Y-m-d H:i:s' }}{% endrestrict %}</td>
+        <td>{% restrict user_authority can_edit_course %}{{ course.created_by.username }}{% endrestrict %}</td>
+        {% endif %}
+        <td>{{ course.is_registerable }}</td>
+        {% comment %} TODO calculated_deadlines_with_origin=course.calculated_deadlines_with_origin などとまとめたい {% endcomment %}
+        {% with calculated_begins_at_with_origin=course.calculated_begins_at_with_origin calculated_opens_at_with_origin=course.calculated_opens_at_with_origin calculated_closes_at_with_origin=course.calculated_closes_at_with_origin calculated_ends_at_with_origin=course.calculated_ends_at_with_origin %}
+        <td>
+            Earliest: {{ calculated_begins_at_with_origin.0|date:'Y-m-d H:i:s' }}
+            <span data-bs-toggle="tooltip" data-bs-placement="top" title="By {{ calculated_begins_at_with_origin.1 }}"><i class="fas fa-info-circle"></i></span>
+            / Default: {{ course.exercise_default_begins_at|date:'Y-m-d H:i:s' }}</td>
+        <td>Earliest: {{ calculated_opens_at_with_origin.0|date:'Y-m-d H:i:s' }}
+            <span data-bs-toggle="tooltip" data-bs-placement="top" title="By {{ calculated_opens_at_with_origin.1 }}"><i class="fas fa-info-circle"></i></span>
+            / Default: {{ course.exercise_default_opens_at|date:'Y-m-d H:i:s' }}</td>
+        <td>Latest: {{ calculated_closes_at_with_origin.0|date:'Y-m-d H:i:s' }}
+            <span data-bs-toggle="tooltip" data-bs-placement="top" title="By {{ calculated_closes_at_with_origin.1 }}"><i class="fas fa-info-circle"></i></span>
+            / Default: {{ course.exercise_default_closes_at|date:'Y-m-d H:i:s' }}</td>
+        <td>Latest: {{ calculated_ends_at_with_origin.0|date:'Y-m-d H:i:s' }}
+            <span data-bs-toggle="tooltip" data-bs-placement="top" title="By {{ calculated_ends_at_with_origin.1 }}"><i class="fas fa-info-circle"></i></span>
+            / Default: {{ course.exercise_default_ends_at|date:'Y-m-d H:i:s' }}</td>
+        {% endwith %}
+        <td>{{ course.exercise_default_is_shared_after_confirmed }}</td>
+        {% if user_authority.can_edit_course %}
+        <td>{% restrict user_authority can_edit_course %}{{ course.edited_at|date:'Y-m-d H:i:s' }}{% endrestrict %}</td>
+        <td>{% restrict user_authority can_edit_course %}{{ course.edited_by.username }}{% endrestrict %}</td>
+        {% endif %}
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+No Courses.
+{% endif %}

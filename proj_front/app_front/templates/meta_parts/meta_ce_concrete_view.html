@@ -1,0 +1,26 @@
+{# :param meta_ce_info.{concrete_cache_docs, setting, concrete} #}
+
+{% if meta_ce_type == 'course' %}
+<div id="view_course_concrete_jupyter_notebook_content__{{ meta_ce_info.setting.name }}__preview" class="jupyter_notebook">Loading ...</div>
+{% elif meta_ce_type == 'exercise' %}
+<div id="view_exercise_concrete_jupyter_notebook_content__{{ meta_ce_info.setting.name }}__preview" class="jupyter_notebook">Loading ...</div>
+{% endif %}
+
+{% if not lazy_load %}
+<script>
+{% if meta_ce_type == 'course' %}
+$(function () { renderCourseNotebookViaAPI(
+    "{{ organization.name }}",
+    "{{ course.name }}",
+    "view_course_concrete_jupyter_notebook_content__{{ meta_ce_info.setting.name }}__preview",
+); });
+{% elif meta_ce_type == 'exercise' %}
+$(function () { renderExerciseNotebookViaAPI(
+    "{{ organization.name }}",
+    "{{ course.name }}",
+    "{{ meta_ce_info.setting.name }}",
+    "view_exercise_concrete_jupyter_notebook_content__{{ meta_ce_info.setting.name }}__preview",
+); });
+{% endif %}
+</script>
+{% endif %}

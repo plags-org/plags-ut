@@ -1,0 +1,62 @@
+{% load mathfilters %}
+
+<tr>
+    <th>
+        <label style="margin-bottom:auto;cursor:pointer;width:100%;" for="test_state_detail__{{ submission.id }}__{{ state }}">{{ state }}</label>
+        <input type="checkbox" data-bs-toggle="toggle" style="display: none;" {% if state_detail_default_open %}checked="checked"{% endif %}
+                id="test_state_detail__{{ submission.id }}__{{ state }}"
+                name="test_state_detail__{{ submission.id }}__{{ state }}" />
+        {% comment %} {{ state }} {% endcomment %}
+    </th>
+    <td>{{ state_result.result.result_types|status_of_result_types_as_html }}</td>
+    <td>{{ state_result.result.time|intdiv:1000000 }}</td>
+    <td>{{ state_result.result.memory|intdiv:1024 }}</td>
+    <td>{{ state_result.result.status_set|status_set_as_html:custom_evaluation_tag_manager }}</td>
+    {% if user_authority.can_review_submission %}
+    <td>{% restrict user_authority can_review_submission %}{{ state_result.result.grade }}{% endrestrict %}</td>
+    {% endif %}
+</tr>
+<tbody class="hide" style="display:none;"><tr ><td colspan="6">
+    <table class="data_list">
+        <tr>
+            <th>Case name</th>
+            <th>Result type</th>
+            <th>Result tag</th>
+            {% if user_authority.can_review_submission %}
+            <th>{% restrict user_authority can_review_submission %}System score{% endrestrict %}</th>
+            {% endif %}
+        </tr>
+        {% for case in state_result.cases %}
+        <tr>
+            {% if is_state_case_detail_viewable %}
+            <th>
+                <label style="margin-bottom:auto;cursor:pointer;width:100%;" for="test_case_detail__{{ submission.id }}__{{ state }}__{{ case.name }}">{{ case.name }}</label>
+                <input type="checkbox" data-bs-toggle="toggle" style="display: none;" {% if case_detail_default_open %}checked="checked"{% endif %}
+                        id="test_case_detail__{{ submission.id }}__{{ state }}__{{ case.name }}"
+                        name="test_case_detail__{{ submission.id }}__{{ state }}__{{ case.name }}" />
+            </th>
+            {% else %}
+            <th>{{ case.name }}</th>
+            {% endif %}
+            <td>{{ case.result_type|result_type_as_html }}</td>
+            <td>{{ case.status_set|status_set_as_html:custom_evaluation_tag_manager }}</td>
+            {% if user_authority.can_review_submission %}
+            <td>{% restrict user_authority can_review_submission %}{{ case.grade }}{% endrestrict %}</td>
+            {% endif %}
+        </tr>
+        {% if is_state_case_detail_viewable %}
+        <tbody class="hide" style="display:none;">
+            {% if user_authority.is_superuser %}
+            <tr><td>{% restrict user_authority is_superuser %}input{% endrestrict %}</td><td colspan="3">{% restrict user_authority is_superuser %}<div class="result_output">{{ case.input }}</div>{% endrestrict %}</td></tr>
+            <tr><td>{% restrict user_authority is_superuser %}output{% endrestrict %}</td><td colspan="3">{% restrict user_authority is_superuser %}<div class="result_output">{{ case.output }}</div>{% endrestrict %}</td></tr>
+            {% endif %}
+            <tr><td>message</td><td colspan="3"><div class="result_output">{{ case.message }}</div></td></tr>
+            {% if user_authority.can_review_submission %}
+                <tr><td>{% restrict user_authority can_review_submission %}debug_message{% endrestrict %}</td>
+                <td colspan="3">{% restrict user_authority can_review_submission %}<div class="result_output">{{ case.debug_message }}</div>{% endrestrict %}</td></tr>
+            {% endif %}
+        </tbody>
+        {% endif %}
+        {% endfor %}
+    </table>
+</td></tr></tbody>

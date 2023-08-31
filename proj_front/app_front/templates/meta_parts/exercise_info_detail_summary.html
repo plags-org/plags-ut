@@ -1,0 +1,18 @@
+{# :param user_authority: #}
+{# :param organization: #}
+{# :param course: #}
+{# :param exercise_info: #}
+{# :param without_trial_link: トライアル提出へのリンクを表示しないフラグ #}
+
+<details id='view_exercise_details__{{ exercise_info.exercise.name }}' class="view_exercise_details">
+    <summary>
+        [{{ exercise_info.concrete_cache_docs|dict_get:exercise_info.setting.default_lang_i18n|dict_get:'title' }}]
+        {% comment %} トライアル提出の可否判定 BEGIN {% endcomment %}
+        {% if exercise_info.setting|is_trial_on_exercise_allowed:user_authority %}
+        {% if not without_trial_link %}
+        <a class="inline_link" style="float:right;padding-right:8px;" href={% url 'exercise/view' o_name=organization.name c_name=course.name e_name=exercise_info.setting.name %}>Trial</a>
+        {% endif %}
+        {% endif %}
+    </summary>
+    {% include 'meta_parts/meta_ce_view.html' with meta_ce_type='exercise' meta_ce_info=exercise_info %}
+</details>

@@ -1,0 +1,94 @@
+{% comment %} ATTENTION これを同一画面で複数回レンダリングするとJSが壊れる {% endcomment %}
+
+<form method="post" enctype="multipart/form-data">
+    <h3>Submit your answer</h3>
+    {% csrf_token %}
+    <table class="table_form table_form_lined">
+        {{ form.as_table }}
+    </table>
+    {% if with_history_link %}
+    <div style="float:left"><button id="id_answer_submit" class="btn btn-primary btn-lg" type="submit" name="answer_submit" disabled>Submit</button></div>
+    <a class="inline_link" href={% url 'submission_parcel/list' o_name=organization.name c_name=course.name %}>History</a>
+    <div style="clear:both"></div>
+    {% else %}
+    <button id="id_answer_submit" class="btn btn-primary btn-lg" type="submit" name="answer_submit" disabled>Submit</button>
+    {% endif %}
+</form>
+
+<script defer>
+function allowColabSubmit () {
+    document.getElementById("id_submission_colaboratory_url_status").innerHTML = `&#x2714;`;
+    document.getElementById("id_answer_submit").disabled = false;
+}
+function prohiitColabSubmit () {
+    document.getElementById("id_submission_colaboratory_url_status").innerHTML = `&#x274C;`;
+    document.getElementById("id_answer_submit").disabled = true;
+    document.getElementById("id_submission_colaboratory_url").value = '';
+}
+function getFileIdFromUrl (url) {
+    const regex = /1[-_0-9A-Za-z]{32}/;
+    const match = regex.exec(url);
+    return match;
+}
+function handleInputValidation () {
+    const elm_submission_colaboratory_url = document.getElementById("id_submission_colaboratory_url");
+    const elm_submission_parcel_file = document.getElementById("id_submission_parcel_file");
+    const submission_colaboratory_url = elm_submission_colaboratory_url.value;
+    const submission_parcel_file = elm_submission_parcel_file.value;
+    let is_invalid_input = true;
+    if (submission_parcel_file) {
+        if (submission_colaboratory_url && submission_colaboratory_url != '') {
+            alert("Specify exactly one submission.");
+        } else if (submission_parcel_file.endsWith('.ipynb')) {
+            is_invalid_input = false;
+        } else {
+            alert("Submission must be of Jupyter Notebook format (*.ipynb).");
+            elm_submission_parcel_file.value = null;
+        }
+    } else if (submission_colaboratory_url) {
+        // TODO URLらしさの検証 ?
+        is_invalid_input = false;
+    } else {
+        is_invalid_input = true;
+    }
+    document.getElementById("id_answer_submit").disabled = is_invalid_input;
+}
+function handleColaboratoryUrlInput(e) {
+    // TODO CORS support
+    // e.g. https://drive.google.com/file/d/1rPOLhFy2u5uaHV9_feKtP1AeMv-_xYn9/view?usp=sharing
+    document.getElementById("id_submission_colaboratory_url_status").innerHTML = `
+<div class="spinner-border text-secondary" role="status">
+    <span class="sr-only">Loading...</span>
+</div>`;
+    let colabReq = new XMLHttpRequest();
+    console.log(e.target.value);
+    const fileId = getFileIdFromUrl(e.target.value);
+    if (!fileId) {
+        prohiitColabSubmit();
+    }
+    console.log(fileId);
+
+    const googleDriveDownloadUrl = "https://docs.google.com/uc?export=download";
+    colabReq.open("GET", googleDriveDownloadUrl);
+    // colabReq.open("GET", "https://www.googleapis.com/drive/v2/files/" + fileId);
+    colabReq.responseType = 'json';
+    colabReq.onload = function (oEvent) {
+        let isSuccess = true;
+        if (isSuccess) {
+            allowColabSubmit();
+        } else {
+            prohiitColabSubmit();
+        }
+        console.dir(colabReq.response);
+    };
+    colabReq.onerror = function () {
+        alert(`Network Error`);
+        document.getElementById("id_submission_colaboratory_url_status").innerHTML = `&#x274C;`;
+    };
+    colabReq.send({id: fileId});
+    //colabReq.send();
+}
+{% comment %} document.getElementById("id_submission_colaboratory_url").addEventListener("change", handleColaboratoryUrlInput); {% endcomment %}
+document.getElementById("id_submission_colaboratory_url").addEventListener("input", handleInputValidation);
+document.getElementById("id_submission_parcel_file").addEventListener("input", handleInputValidation);
+</script>

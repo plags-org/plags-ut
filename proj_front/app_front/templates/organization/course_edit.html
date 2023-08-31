@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Courses in Organization [{{ organization.name }}]{% endblock %}
+
+{% block content %}
+{% include 'meta_parts/diagram.html' %}
+
+<hr />
+<h2>Edit Courses in Organization [{{ organization.name }}]</h2>
+
+{% comment %} TODO 編集対象コースの現設定を一覧/サマリ化できると良い LenovoのPC比較とかIntelのCPU比較みたいなイメージ {% endcomment %}
+
+<form method="post">
+    {% csrf_token %}
+    <table class="table_form">
+        {{ form.as_table }}
+    </table>
+    <button type="submit" class="btn btn-primary">Update</button>
+</form>
+
+<hr />
+<h2>Courses:</h2>
+{% include 'meta_parts/course_list_setting.html' with courses=courses without_create_link=True %}
+
+{% endblock %}

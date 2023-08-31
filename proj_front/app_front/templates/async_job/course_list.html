@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Job history - [{{ organization.name }} / {{ course.title }}]{% endblock %}
+
+{% block content %}
+{% include "meta_parts/diagram.html" %}
+
+<strong><i class="fa fa-exclamation" aria-hidden="true"></i> EXPERIMENTAL FEATURE.</strong>
+
+<h2>Job history:</h2>
+Showing recent 50 operations.
+{% comment %} {% include "meta_parts/submission_parcel_list.html" with submission_parcels=submission_parcels %} {% endcomment %}
+<table class="data_list">
+    <tr>
+        {% if user_authority.is_superuser %}
+        <th>{% restrict user_authority is_superuser %}ID{% endrestrict %}</th>
+        {% endif %}
+        <th>Time</th>
+        <th>Executor</th>
+        <th>Job</th>
+        <th>Status</th>
+        <th>Started</th>
+        <th>Finished</th>
+        <th>Outcome</th>
+        <th>Links</th>
+    </tr>
+    {% for job_history in job_history_list %}
+    <tr>
+        {% if user_authority.is_superuser %}
+        <td>{% restrict user_authority is_superuser %}{{ job_history.id }}{% endrestrict %}</td>
+        {% endif %}
+        <td>{{ job_history.executed_at|date:'Y-m-d H:i:s' }}</td>
+        <td>{{ job_history.executed_by.username }} ({{ job_history.executed_by.email }})</td>
+        <td>{{ job_history.job_type }}</td>
+        <td>{{ job_history.job_status }}</td>
+        <td>{{ job_history.job_started_at|date:'Y-m-d H:i:s' }}</td>
+        <td>{{ job_history.job_finished_at|date:'Y-m-d H:i:s' }}</td>
+        <td>
+            {% if job_history.job_outcome_type == "FILE" %}
+                <a href="javascript:alert('To be implemented');" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ job_history.job_outcome_filename }}">Download</a>
+            {% elif job_history.job_outcome_type == "TEXT" %}
+                <a href="javascript:alert('To be implemented');">View</a>
+            {% endif %}
+        </td>
+        <td><a href="javascript:alert('To be implemented');">Detail</a></td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

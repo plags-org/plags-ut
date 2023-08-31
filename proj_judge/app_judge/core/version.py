@@ -1,0 +1,1 @@
+JUDGE_CORE_API_VERSION = "v0.0-alpha"

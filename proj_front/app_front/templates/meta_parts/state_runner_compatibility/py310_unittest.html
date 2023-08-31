@@ -1,0 +1,52 @@
+{% load mathfilters %}
+
+<tr>
+    <th>
+        <label style="margin-bottom:auto;cursor:pointer;width:100%;" for="test_state_detail__{{ submission.id }}__{{ state }}">{{ state }}</label>
+        <input type="checkbox" data-bs-toggle="toggle" style="display: none;" {% if state_detail_default_open %}checked="checked"{% endif %}
+                id="test_state_detail__{{ submission.id }}__{{ state }}"
+                name="test_state_detail__{{ submission.id }}__{{ state }}" />
+        {% comment %} {{ state }} {% endcomment %}
+    </th>
+    <td>{{ state_result.result.status_set|result_types_as_html }}</td>
+    <td>{{ state_result.result.time|intdiv:1000000 }}</td>
+    <td>{{ state_result.result.memory|intdiv:1024 }}</td>
+    <td>{{ state_result.result.tag_set|tag_set_as_html_v2:custom_evaluation_tag_manager }}</td>
+</tr>
+<tbody class="hide" style="display:none;"><tr ><td colspan="5">
+    <table class="data_list">
+        <tr>
+            <th>Test name</th>
+            <th>Status</th>
+            <th>Result tag</th>
+        </tr>
+        {% for case in state_result.cases %}
+        <tr>
+            {% if is_state_case_detail_viewable_v2 %}
+            <th>
+                <label style="margin-bottom:auto;cursor:pointer;width:100%;" for="test_case_detail__{{ submission.id }}__{{ state }}__{{ case.name }}">{{ case.name }}</label>
+                <input type="checkbox" data-bs-toggle="toggle" style="display: none;" {% if case_detail_default_open %}checked="checked"{% endif %}
+                        id="test_case_detail__{{ submission.id }}__{{ state }}__{{ case.name }}"
+                        name="test_case_detail__{{ submission.id }}__{{ state }}__{{ case.name }}" />
+            </th>
+            {% else %}
+            <th>{{ case.name }}</th>
+            {% endif %}
+            <td>{{ case.status|result_type_as_html }}</td>
+            <td>{{ case.tags|tag_set_as_html_v2:custom_evaluation_tag_manager }}</td>
+        </tr>
+        {% if is_state_case_detail_viewable_v2 %}
+        <tbody class="hide" style="display:none;">
+            <tr><td>Message</td><td colspan="3"><div class="result_output">{{ case.student_message }}</div></td></tr>
+            {% if user_authority.can_review_submission %}
+                <tr><td>{% restrict user_authority can_review_submission %}Error message{% endrestrict %}</td>
+                <td colspan="3">{% restrict user_authority can_review_submission %}<div class="result_output">{{ case.reviewer_message }}</div>{% endrestrict %}</td></tr>
+            {% endif %}
+            {% if user_authority.is_superuser %}
+            <tr><td>{% restrict user_authority is_superuser %}System message{% endrestrict %}</td><td colspan="3">{% restrict user_authority is_superuser %}<div class="result_output">{{ case.system_message }}</div>{% endrestrict %}</td></tr>
+            {% endif %}
+        </tbody>
+        {% endif %}
+        {% endfor %}
+    </table>
+</td></tr></tbody>

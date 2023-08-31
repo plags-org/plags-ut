@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - [{{ organization.name }} / {{ course.name }}]{% endblock %}
+
+{% block content %}
+{% include "meta_parts/diagram.html" %}
+
+{% if user_authority.can_view_course_pulished %}
+{% comment %} 受講登録済み {% endcomment %}
+<div class="alert alert-info" role="alert">
+    You already registered to [ {{ organization.name}} / {{ course.name }} ] .
+</div>
+
+{% elif course.is_registerable %}
+{% comment %} 受講登録期間中 {% endcomment %}
+<div class="alert alert-info" role="alert">
+    You are now registering to [ {{ organization.name}} / {{ course.name }} ] .
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-primary">Register</button>
+</form>
+
+{% else %}
+<div class="alert alert-warning" role="alert">
+    Registration for [ {{ organization.name}} / {{ course.name }} ] is closed.
+</div>
+
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}Activate User{% endblock %}
+
+{% block content %}
+{% include "meta_parts/diagram.html" %}
+
+<h2>Activate User</h2>
+
+<form method="post">
+    {% csrf_token %}
+    <table class="table_form table_form_lined">
+        {{ form.as_table }}
+    </table>
+    <button type="submit" class="btn btn-primary">Activate and Login</button>
+</form>
+
+{% endblock %}

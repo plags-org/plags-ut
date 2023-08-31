@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit course description - [{{ organization.name }} / {{ course.title }}]{% endblock %}
+
+{% block content %}
+{% include 'meta_parts/diagram.html' %}
+
+<hr />
+<h2>Edit course description [{{ course.title }}]</h2>
+
+{% include 'meta_parts/meta_ce_view.html' with meta_ce_type='course' meta_ce_info=course_info without_edit_link=True %}
+
+<form method="post">
+    {% csrf_token %}
+    <table class="table_form">
+        {{ form.as_table }}
+    </table>
+    <button type="submit" class="btn btn-primary">Update</button>
+</form>
+
+{% endblock %}

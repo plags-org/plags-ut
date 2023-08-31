@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile - [{{ target_user.username }}]{% endblock %}
+
+{% block content %}
+{% include 'meta_parts/user_info.html' with target_user=target_user %}
+
+<hr />
+{% comment %} 「仮アカウント」の有効化 {% endcomment %}
+{% comment %} TODO summary-detail {% endcomment %}
+{% if user == target_user and user_authority.is_transitory %}
+<p><strong>ATTENTION:</strong> Your PLAGS UT account is not activated yet. Activation is necessary in order to submit your answers via PLAGS UT. Please follow the procedure to activate it.</p>
+<h3>Account activation procedure:</h3>
+
+<h4>{{ current_input_step|input_step_prefixing:1 }}1. Register your common ID number</h4>
+<form method="post">
+    {% csrf_token %}
+    {{ register_google_auth_user_form.as_p }}
+    <button type="submit" name="register_google_auth_user" class="btn btn-{% if current_input_step != 1 %}outline-{% endif %}primary">Register</button>
+</form>
+
+<h4 style="margin-top: 16px">{{ current_input_step|input_step_prefixing:2 }}2. Verify your common ID number to link to your PLAGS UT account</h4>
+<p>A mail titled <code>"[PLAGS UT] Verify your common ID number"</code> will be sent to your ECCS cloud mail and put "Verification token" in the mail to the following form.</p>
+{% if request.user.google_id_common_id_number_unverified %}
+<p>Last mail sent:
+    <code>
+    {% if request.user.google_id_common_id_number_verification_mail_last_sent_at %}
+        {{ request.user.google_id_common_id_number_verification_mail_last_sent_at | date:'Y-m-d H:i:s' }}
+    {% else %}
+        (not yet)
+    {% endif %}
+    </code>
+</p>
+<form method="post">
+    {% csrf_token %}
+    {{ confirm_common_id_number_form.as_p }}
+    <button type="submit" name="confirm_common_id_number" class="btn btn-{% if current_input_step != 2 %}outline-{% endif %}primary">Verify</button>
+</form>
+{% endif %}
+
+<h4 style="margin-top: 16px">{{ current_input_step|input_step_prefixing:3 }}3. (New user only) Check and fill your information</h4>
+{% if new_user_info_form %}
+<ol>
+    <li>Check your full name and fix it if necessary. (initially filled from your ECCS Cloud account settings)</li>
+    <li>Fill your student card number.</li>
+    <li>Click "Update" button.</li>
+</ol>
+<form method="post">
+    {% csrf_token %}
+    {{ new_user_info_form.as_p }}
+    <button type="submit" name="new_user_info" class="btn btn-{% if current_input_step != 3 %}outline-{% endif %}primary">Update</button>
+
+    <script>add_no_student_card_number_change_hook();</script>
+</form>
+{% endif %}
+
+<h4 style="margin-top: 16px">4. (Optional) Update your username as you like</h4>
+<p>You can set your own username (if not already taken) from profile page.</p>
+
+{% else %}
+{% comment %} 有効なアカウント {% endcomment %}
+{% comment %} NOTE 本人以外によるプロフィール閲覧の場合、及び有効なアカウントである場合にはプロフィール編集フォームを表示する {% endcomment %}
+
+{% if user == target_user %}
+<h3>Update my profile</h3>
+{% else %}
+<p><strong>ATTENTION:</strong> You are now viewing/editing other user's information.</p>
+<h3>Update [ {{ target_user.username }} ]'s profile</h3>
+{% endif %}
+
+<form method="post">
+    {% csrf_token %}
+    {% if not user_authority.is_faculty %}
+    {% include 'meta_parts/attention_on_profile.html' with attention_on_username=True %}
+    {% endif %}
+    {{ form.as_p }}
+    <button type="submit" name="update_profile" class="btn btn-primary">Update</button>
+
+    <script>add_no_student_card_number_change_hook();</script>
+</form>
+{% if user == target_user %}
+  {% if user_authority.is_faculty %}
+<hr />
+<a class="inline_link" href={% url 'update_email' %}>Update your email address</a>
+<a class="inline_link" href={% url 'update_password' %}>Update your password</a>
+  {% endif %}
+{% endif %}
+
+{% if user == target_user %}
+{% restrict user_authority is_superuser %}
+<hr />
+<h3>For superusers:</h3>
+
+<h4>Manage System:</h4>
+<ul>
+    <li><a href={% url 'administration/version' %}>Check System Versions</a></li>
+    <li><a href={% url 'administration/system_settings' %}>System Settings</a> (For operator-side administrators only!)</li>
+    <li><a href={% url 'administration/system_email_setting' %}>System Email Settings</a> (For operator-side administrators only!)</li>
+    <li><a href={% url 'administration/data_migration' %}>System Data Migration</a> (For developer-side administrators only!)</li>
+    <li><a href={% url 'administration/send_mail_bulk' %}>Send Mail</a> (For system maintenance notification only!)</li>
+</ul>
+
+<h4>Manage organizations:</h4>
+<ul>
+    <li><a href={% url 'organization/create' %}>Create New Organization</a></li>
+    <li><a href={% url 'organization/list' %}>List All Organization</a></li>
+</ul>
+
+<h4>Manage users:</h4>
+<ul>
+    <li><a href={% url 'user/create' %}>Create New User</a></li>
+    <li><a href={% url 'transitory_user/list' %}>List All Transitory Users</a></li>
+    <li><a href={% url 'register/activate' %}>Activate Users</a></li>
+    <li><a href={% url 'user/list' %}>List All Users</a></li>
+    <li><a href={% url 'user/update_email' %}>Update User Email</a></li>
+    <li><a href={% url 'user/reset_password/form' %}>Send Password Reset PIN</a></li>
+</ul>
+
+{# <ul> #}
+{#     <li><a href={% url 'lecturer/add' %}>Add Lecturer</a></li> #}
+{#     <li><a href={% url 'student/add' %}>Add Student</a></li> #}
+{# </ul> #}
+<hr />
+<h3>For students:</h3>
+{% endrestrict %}
+{% endif %}
+
+{% if organization_users %}
+<hr />
+{% if user == target_user %}
+<h3>Your Organizations:</h3>
+{% else %}
+<h3>[ {{ target_user.username }} ]'s Organizations:</h3>
+{% endif %}
+{% include 'meta_parts/meta_oc_oc_list.html' with meta_oc_type='organization' meta_oc_users=organization_users %}
+{% endif %}
+
+{% if course_users %}
+<hr />
+{% if user == target_user %}
+<h3>Your Courses:</h3>
+{% else %}
+<h3>[ {{ target_user.username }} ]'s Courses:</h3>
+{% endif %}
+{% include 'meta_parts/meta_oc_oc_list.html' with meta_oc_type='course' meta_oc_users=course_users %}
+{% endif %}
+
+{% if user != target_user %}
+{% restrict user_authority can_manage_user %}
+<details>
+    <summary>DANGEROUS OPERATIONS</summary>
+    <table class="table_form_lined"><tbody>
+        <tr>
+            <th align="left" style="padding-right: 16px">
+                {% if target_user.is_active %}
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" name="unlink_user" class="btn btn-warning">Unlink</button>
+                </form>
+                {% else %}
+                <div data-bs-toggle="tooltip" data-bs-placement="top" title="This account is already deactivated.">
+                    <button type="submit" name="unlink_user" class="btn btn-warning" disabled>Unlink</button>
+                </div>
+                {% endif %}
+            </th>
+            <td>
+                Unlink user's "external accounts" (i.e. ECCS Cloud account and common ID number) from PLAGS UT.
+                Once unlinked, these "external accounts" can be linked to another PLAGS UT account again.
+                <br /><strong>!!! THIS OPERATION CANNOT BE UNDONE !!!</strong>
+            </td>
+        </tr>
+        <tr>
+            <th align="left" style="margin-right: 32px">
+                {% if target_user.is_active %}
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" name="ban_user" class="btn btn-danger">Ban</button>
+                </form>
+                {% else %}
+                <div data-bs-toggle="tooltip" data-bs-placement="top" title="This account is already deactivated.">
+                    <button type="submit" name="unlink_user" class="btn btn-danger" disabled>Ban</button>
+                </div>
+                {% endif %}
+            </th>
+            <td>
+                Ban user's "external accounts" from PLAGS UT <strong>permanently</strong>.
+                Once banned, these "external accounts" can <strong>never</strong> be linked to another PLAGS UT account again.
+                <br /><strong>!!! THIS OPERATION CANNOT BE UNDONE !!!</strong>
+            </td>
+        </tr>
+    </tbody></table>
+</details>
+{% endrestrict %}
+{% endif %}
+
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,39 @@
+{# :param: submission #}
+
+{% if not without_confirm_description_message %}
+<div class="view_float_tag_field">
+    {% if submission.is_lecturer_evaluation_confirmed %}
+    <div class="view_float_tag_left lecturer_evaluation_confirmed">Confirmed. Comment is shared with student.</div>
+    {% else %}
+    <div class="view_float_tag_left lecturer_evaluation_not_confirmed">NOT confirmed. Comment is NOT shared with student.</div>
+    {% endif %}
+</div>
+{% endif %}
+
+<table class="data_list">
+    <tr>
+        <th>Action</th>
+        <th>When</th>
+        <th>Who</th>
+    </tr>
+    {% comment %} <tr>
+        <th>Reviewer assigned</th>
+        <td>{{ submission.lecturer_assigned.username }}</td>
+    </tr> {% endcomment %}
+    <tr>
+        <th>Last confirmation edit</th>
+        <td>{{ submission.confirmed_at|date:'Y-m-d H:i:s'|empty_to_hyphen }}</td>
+        <td>{{ submission.confirmed_by.username|empty_to_hyphen }}</td>
+    </tr>
+    <tr>
+        <th>Last remarks edit</th>
+        <td>{{ submission.reviewer_remarks_updated_at|date:'Y-m-d H:i:s'|empty_to_hyphen }}</td>
+        <td>{{ submission.reviewer_remarks_updated_by.username|empty_to_hyphen }}</td>
+    </tr>
+    <tr>
+        <th>Last comment edit</th>
+        <td>{{ submission.lecturer_comment_updated_at|date:'Y-m-d H:i:s'|empty_to_hyphen }}</td>
+        <td>{{ submission.lecturer_comment_updated_by.username|empty_to_hyphen }}</td>
+    </tr>
+</table>
+<hr />

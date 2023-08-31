@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}User Email Update{% endblock %}
+
+{% block content %}
+{% include "meta_parts/diagram.html" %}
+
+<p><strong>ATTENTION:</strong> E-mail addresses updated from this form will not be checked valid.</p>
+
+<form method="post">
+    <h2>Update User Email</h2>
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">Update</button>
+</form>
+
+{% endblock %}

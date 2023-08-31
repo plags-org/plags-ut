@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}List of course users{% endblock %}
+
+{% block content %}
+{% include "meta_parts/diagram.html" %}
+
+{% restrict user_authority can_edit_organization %}
+<h2>List of course users</h2>
+
+{% include 'meta_parts/organization_course_user_list.html' with organizations=organizations %}
+{% endrestrict %}
+
+{% endblock %}

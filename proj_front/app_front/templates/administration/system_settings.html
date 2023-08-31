@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}System Settings{% endblock %}
+
+{% block content %}
+{% include "meta_parts/diagram.html" %}
+
+{% if user_authority.is_superuser %}
+<h2>System Settings</h2>
+
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">UPDATE</button>
+</form>
+
+<hr />
+<h3>Preview</h3>
+
+<table class="data_list">
+    <tbody>
+        <tr>
+            <th>Section</th>
+            <th>Updated At</th>
+            <th>Updated By</th>
+        </tr>
+        <tr>
+            <th>use_login_page_notice</th>
+            <td>{{ system_settings.use_login_page_notice_updated_at|date:'Y-m-d H:i:s' }}</td>
+            <td>{{ system_settings.use_login_page_notice_updated_by.username }}</td>
+        </tr>
+        <tr>
+            <th>login_page_notice_content</th>
+            <td>{{ system_settings.login_page_notice_content_updated_at|date:'Y-m-d H:i:s' }}</td>
+            <td>{{ system_settings.login_page_notice_content_updated_by.username }}</td>
+        </tr>
+    </tbody>
+</table>
+
+{% include "meta_parts/system_settings_login_page_notice.html" with is_preview=True %}
+
+{% endif %}
+{% endblock %}

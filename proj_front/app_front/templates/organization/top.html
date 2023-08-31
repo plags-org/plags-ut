@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Organization - [{{ organization.name }}]{% endblock %}
+
+{% block content %}
+{% include "meta_parts/diagram.html" %}
+
+{% restrict user_authority can_edit_organization %}
+<hr />
+<h2>Details of organization [{{ organization.name }}]</h2>
+<table class="data_list">
+    <tr>
+        <th>Name</th>
+        <td>{{ organization.name }}</td>
+    </tr>
+    <tr>
+        <th>Created at</th>
+        <td>{{ organization.created_at|date:'Y-m-d H:i:s' }}</td>
+    </tr>
+</table>
+{% endrestrict %}
+
+<hr />
+<h2>Containing Courses:</h2>
+{% include 'meta_parts/course_list.html' with courses=courses %}
+
+{% restrict user_authority can_edit_organization %}
+<h2>Manage Courses:</h2>
+<ul>
+    <li><a href={% url 'organization/course/edit' o_name=organization.name %}>Edit courses</a></li>
+    <li><a href={% url 'organization/course/delete' o_name=organization.name %}>Delete courses</a></li>
+    <li><a href={% url 'course_top_notice_by_organization/list' o_name=organization.name %}>Manage course-top notices</a></li>
+    <li><a href={% url 'organization/course_user/list' o_name=organization.name %}>List of course users</a></li>
+</ul>
+
+{% restrict user_authority can_manage_organization_user %}
+<hr />
+<h2>Manage Organization Users:</h2>
+<ul>
+    <li><a href={% url 'organization_manager/user/create' o_name=organization.name %}>Create New User</a></li>
+    <li><a href={% url 'register/activate' %}>Activate New User</a></li>
+    <li><a href={% url 'organization_manager/transitory_user/list' o_name=organization.name %}>List All Transitory Users</a></li>
+    <li><a href={% url 'user/reset_password/form' %}>Send Password Reset PIN</a></li>
+
+    {% comment %} <li><a href={% url 'organization_user/list' o_name=organization.name %}>List Organization Users</a></li> {% endcomment %}
+    {% comment %} <li><a href={% url 'organization_user/update_email' o_name=organization.name %}>Update User Email</a></li> {% endcomment %}
+
+    <li><a href={% url 'organization_user/add_faculty' o_name=organization.name %}>Invite Faculty User to Organization</a></li>
+    <li><a href={% url 'organization_user/change_faculty' o_name=organization.name %}>Change Faculty User Authority in Organization</a></li>
+    {% comment %} <li><a href={% url 'organization_user/create' o_name=organization.name %}>Create and Invite Multiple Users</a></li> {% endcomment %}
+    <li><a href={% url 'organization_user/kickout' o_name=organization.name %}>Kickout Multiple Users from Organization</a></li>
+</ul>
+{% endrestrict %}
+
+<hr />
+<h2>Organization Users:</h2>
+{% include 'meta_parts/meta_oc_user_list.html' with meta_oc_users=organization_users %}
+{% endrestrict %}
+
+{% restrict user_authority can_create_exercise %}
+<hr>
+<h2>Upload exercises (foreach course)</h2>
+{% comment %} <a class="inline_link" href={% url 'exercise/create' o_name=organization.name c_name=course.name %}>CREATE EXERCISE</a> {% endcomment %}
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <h3>Upload exercise configuration</h3>
+    <table class="table_form">
+        <colgroup>
+            <col span="1" style="width: 20%;">
+            <col span="1" style="width: 80%;">
+        </colgroup>
+        {{ exercise_upload_form.as_table }}
+    </table>
+    <button type="submit" name="exercise_upload" class="btn btn-primary">Upload (foreach course)</button>
+</form>
+{% endrestrict %}
+
+{% endblock %}

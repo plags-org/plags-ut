@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Course Users - [{{ organization.name }} / {{ course.title }}]{% endblock %}
+
+{% block content %}
+{% include "meta_parts/diagram.html" %}
+
+{% restrict user_authority can_edit_course %}
+
+{% restrict user_authority can_manage_course_user %}
+<h2>Operations:</h2>
+
+<ul>
+    <li><a class="inline_link" href={% url 'course_user/add_student' o_name=organization.name c_name=course.name %}>Invite User (Student)</a></li>
+    <li><a class="inline_link" href={% url 'course_user/add_faculty' o_name=organization.name c_name=course.name %}>Invite User (Faculty)</a></li>
+    <li><a class="inline_link" href={% url 'course_user/change_student' o_name=organization.name c_name=course.name %}>Change User Authority (Student)</a></li>
+    <li><a class="inline_link" href={% url 'course_user/change_faculty' o_name=organization.name c_name=course.name %}>Change User Authority (Faculty)</a></li>
+    {% comment %} <li><a class="inline_link" href={% url 'course_user/create' o_name=organization.name c_name=course.name %}>Create and Invite Multiple Users</a></li> {% endcomment %}
+    <li><a class="inline_link" href={% url 'course_user/kickout' o_name=organization.name c_name=course.name %}>Kickout Multiple Users</a></li>
+    <li><a class="inline_link" href={% url 'course_user/lms_diff' o_name=organization.name c_name=course.name %}>Calculate differences between ITC-LMS</a></li>
+</ul>
+{% endrestrict %}
+
+<h2>Course Users:</h2>
+<a class="inline_link" href={% url 'course_user/export' o_name=organization.name c_name=course.name %}>Export</a>
+
+{% include 'meta_parts/meta_oc_user_list.html' with meta_oc_users=course_users %}
+{% endrestrict %}
+
+{% endblock %}

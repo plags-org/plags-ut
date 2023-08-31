@@ -1,0 +1,17 @@
+{# param[bool]: is_state_case_detail_viewable: state, case に関する詳細を閲覧可能 #}
+{# param[bool]: is_state_case_detail_viewable_v2: state, case に関する詳細を閲覧可能 (for Evaluator V2) #}
+
+{% if evaluation_result.metadata.evaluator.name == 'plags_ut_judge' %}
+{% if evaluation_result.metadata.evaluator.version == 'v0.0'%}
+{% include 'meta_parts/evaluation_result_compatibility/plags_ut_judge_v0_0.html' %}
+{% elif evaluation_result.metadata.evaluator.version == 'v1.0' %}
+{% include 'meta_parts/evaluation_result_compatibility/plags_ut_judge_v1_0.html' %}
+{% elif evaluation_result.metadata.evaluator.version == 'v2.0' %}
+{% include 'meta_parts/evaluation_result_compatibility/plags_ut_judge_v2_0.html' %}
+{% else %}
+{% comment %} まだそんなものはないがとりあえず v1.0 で代用 {% endcomment %}
+{% include 'meta_parts/evaluation_result_compatibility/plags_ut_judge_v1_0.html' %}
+{% endif %}
+{% else %}
+{% include 'meta_parts/evaluation_result_compatibility/tadarignis.html' %}
+{% endif %}

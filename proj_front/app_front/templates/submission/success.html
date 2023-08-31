@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}[{{ course.title }} &gt; {{ exercise.name }}] Submission Success{% endblock %}
+
+{% block content %}
+
+<h2>[{{ organization.name }} &gt; {{ course.title }} &gt; {{ exercise.name }}]</h2>
+
+<hr />
+
+<h4>Submission completed.</h4>
+
+<a href={% url 'exercise/view' o_name=organization.name c_name=course.name e_name=exercise.name %}>Back to exercise</a>
+
+<hr />
+
+{% endblock %}

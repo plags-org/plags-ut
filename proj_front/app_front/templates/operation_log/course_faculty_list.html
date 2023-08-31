@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}Operation Logs - [{{ organization.name }} / {{ course.title }}]{% endblock %}
+
+{% block content %}
+{% include "meta_parts/diagram.html" %}
+
+<strong><i class="fa fa-exclamation" aria-hidden="true"></i> EXPERIMENTAL FEATURE.</strong>
+
+<h2>Operation Logs:</h2>
+Showing recent 50 operations.
+{% comment %} {% include "meta_parts/submission_parcel_list.html" with submission_parcels=submission_parcels %} {% endcomment %}
+<table class="data_list">
+    <tr>
+        {% if user_authority.is_superuser %}
+        <th>{% restrict user_authority is_superuser %}ID{% endrestrict %}</th>
+        {% endif %}
+        <th>Time</th>
+        <th>Operator</th>
+        <th>Operation</th>
+    </tr>
+    {% for operation_log in operation_logs %}
+    <tr>
+        {% if user_authority.is_superuser %}
+        <td>{% restrict user_authority is_superuser %}{{ operation_log.id }}{% endrestrict %}</td>
+        {% endif %}
+        <td>{{ operation_log.operated_at|date:'Y-m-d H:i:s' }}</td>
+        <td>{{ operation_log.operated_by.username }} ({{ operation_log.operated_by.email }})</td>
+        <td>{{ operation_log.operation_type }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

@@ -1,0 +1,95 @@
+{% load mathfilters %}
+
+<table class="data_list">
+    <tr>
+        <th>Overall</th>
+        {% if is_state_detail_viewable or is_state_case_detail_viewable %}
+        <td>-</td>
+        <td>-</td>
+        {% endif %}
+        {% comment %} WORKAROUND 旧形式ではJSON化されていたが新形式ではそうではない SSがendしたら json_load_status_if_necessary を消す {% endcomment %}
+        <td>{{ evaluation_result.overall_status|json_load_status_if_necessary|status_as_html }}</td>
+        <td>{{ evaluation_result.overall_grade }}</td>
+    </tr>
+    <tr>
+        <th>State Name</th>
+        {% if is_state_detail_viewable or is_state_case_detail_viewable %}
+        <th>Elapse [ms]</th>
+        <th>Memory [MiB]</th>
+        {% endif %}
+        <th>Tags</th>
+        <th>Score</th>
+    </tr>
+    {% for test_state, test_results in evaluation_result.test_state_results.items %}
+    <tr>
+        {% if is_state_detail_viewable or is_state_case_detail_viewable %}
+        <th>
+            <label style="margin-bottom:auto;cursor:pointer;width:100%;" for="test_state_detail__{{ submission.id }}__{{ test_state }}">[ + ] {{ test_state }}</label>
+            <input type="checkbox" data-bs-toggle="toggle" style="display: none;"
+                    id="test_state_detail__{{ submission.id }}__{{ test_state }}"
+                    name="test_state_detail__{{ submission.id }}__{{ test_state }}">
+        </th>
+        {% else %}
+        <th>{{ test_state }}</th>
+        {% endif %}
+        {% if is_state_detail_viewable or is_state_case_detail_viewable %}
+        <td>{{ test_results.total_execution_time_ns|intdiv:1000000 }}</td>
+        <td>{{ test_results.peak_memory_usage_kibibytes|intdiv:1024 }}</td>
+        {% endif %}
+        <td>
+            {% for status in test_results.statuses %}
+                {{ status|status_as_html }}
+            {% endfor %}
+        </td>
+        <td>{{ test_results.grade }}</td>
+    </tr>
+    {% if is_state_detail_viewable or is_state_case_detail_viewable %}
+    <tbody class="hide" style="display:none;"><tr><td colspan="5">
+        <table class="data_list">
+            <tr>
+                <th>Case name</th>
+                <th>Tags</th>
+                <th>Score</th>
+            </tr>
+            {% for result in test_results.results %}
+            <tr>
+                {% if is_state_case_detail_viewable %}
+                <th>
+                    <label style="margin-bottom:auto;cursor:pointer;width:100%;" for="test_case_detail__{{ submission.id }}__{{ test_state }}__{{ result.name }}">[ + ] {{ result.name }}</label>
+                    <input type="checkbox" data-bs-toggle="toggle" style="display: none;" checked="checked"
+                            id="test_case_detail__{{ submission.id }}__{{ test_state }}__{{ result.name }}"
+                            name="test_case_detail__{{ submission.id }}__{{ test_state }}__{{ result.name }}">
+                </th>
+                {% else %}
+                <th>{{ result.name }}</th>
+                {% endif %}
+                <td>
+                    {% for status in result.statuses %}
+                        {{ status|status_as_html }}
+                    {% endfor %}
+                </td>
+                <td>{{ result.grade }}</td>
+            </tr>
+            {% if is_state_case_detail_viewable %}
+            <tbody class="hide" style="display:none;">
+                <tr><td>input</td><td colspan="2"><div class="result_output">{{ result.input }}</div></td></tr>
+                <tr><td>output</td><td colspan="2"><div class="result_output">{{ result.output }}</div></td></tr>
+                <tr><td>error</td><td colspan="2"><div class="result_output">{{ result.errormsg }}</div></td></tr>
+            </tbody>
+            {% endif %}
+            {% endfor %}
+        </table>
+    </td></tr></tbody>
+    {% endif %}
+    {% endfor %}
+</table>
+
+{% if is_state_detail_viewable or is_state_case_detail_viewable %}
+<script>
+    $(document).ready(function() {
+        $('[data-bs-toggle="toggle"]').change(function(){
+            $(this).parents().next('.hide').toggle();
+        });
+    });
+</script>
+{% endif %}

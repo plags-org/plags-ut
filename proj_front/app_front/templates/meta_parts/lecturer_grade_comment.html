@@ -1,0 +1,25 @@
+{# :param: submission #}
+
+<div style="border: double 4px #000; border-radius: 8px">
+{% comment %} スコアが学生に対して公開されており、confirmedである場合に限り、学生に見せてよい {% endcomment %}
+{% if submission.is_lecturer_evaluation_confirmed %}
+
+<table class="data_tuple" style="margin: 4px">
+    <tbody>
+        {% if submission.exercise.calculated_score_visible_from <= "30_student" %}
+        <tr>
+            <th>Score</th>
+            <td>{{ submission.lecturer_grade|render_score }}</td>
+        </tr>
+        {% endif %}
+        <tr>
+            <th>Comment</th>
+            <td><div class="static_markdown_content" style="margin: 4px">{{ submission.lecturer_comment|linebreaks }}</div></td>
+        </tr>
+    </tbody>
+</table>
+
+{% else %}
+<p style="margin: 4px">Not available yet. Please wait for the lecturer to comment.</p>
+{% endif %}
+</div>

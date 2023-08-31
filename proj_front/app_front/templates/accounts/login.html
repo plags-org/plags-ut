@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div style="width: 100%; height: 64px;"></div>
+
+{% comment %} <div style="display:flex;justify-content:center;align-items:center"> {% endcomment %}
+<div style="margin: 0 auto;max-width:480px">
+    <p align="center">
+        {% if next %}
+            {% if user.is_authenticated %}
+                Your account doesn't have access to this page.
+                To proceed, please login with an account that has access.
+            {% else %}
+                Please login to see this page.
+            {% endif %}
+        {% endif %}
+    </p>
+    <p align="center">
+        <a href="{% url 'login_google_auth' %}{% if next %}?next={{ next }}{% endif %}" class="btn btn-primary" style="padding: 8px 32px">Login with ECCS Cloud</a>
+    </p>
+    <p><strong>ATTENTION</strong>: If you already have a PLAGS-UT account, login with "ECCS Cloud" then your PLAGS UT account will be automatically linked to your ECCS Cloud account.</p>
+    <p align="center">
+        Go to
+        <a href="{% url 'login_password_auth' %}{% if next %}?next={{ next }}{% endif %}">here</a>
+        for faculty login.
+    </p>
+</div>
+
+{% include "meta_parts/system_settings_login_page_notice.html" %}
+
+{% endblock %}

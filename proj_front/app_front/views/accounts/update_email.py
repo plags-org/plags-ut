@@ -185,7 +185,12 @@ def _process_request_form(
         user.save()
 
     protocol_domain = f"{request.scheme}://{request.get_host()}"
-    send_email_update_email(user, protocol_domain)
+    email_result = send_email_update_email(user, protocol_domain)
+    if not email_result.success:
+        messages.error(
+            request, "Failed to send email. Please contact to administrator."
+        )
+        return _view(request, user_authority)
 
     request_user.refresh_from_db()
     messages.info(request, '"Account update PIN" is sent to requested email.')

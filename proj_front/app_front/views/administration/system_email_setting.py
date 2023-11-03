@@ -1,5 +1,5 @@
 import traceback
-from typing import ClassVar, Literal
+from typing import ClassVar, Dict, Literal, Optional
 
 from django.contrib import messages
 from django.http import Http404
@@ -59,8 +59,10 @@ class AdministrationEmailSettingView(AbsGoogleOauthView):
         request: HttpRequest,
         user_authority: UserAuthorityDict,
         *,
-        email_send_test_form: AdministrationSystemEmailSendTestForm = None,
-        to_address_override_form: AdministrationSystemEmailToAddressOverrideForm = None,
+        email_send_test_form: Optional[AdministrationSystemEmailSendTestForm] = None,
+        to_address_override_form: Optional[
+            AdministrationSystemEmailToAddressOverrideForm
+        ] = None,
     ) -> HttpResponse:
         if email_send_test_form is None:
             email_send_test_form = AdministrationSystemEmailSendTestForm()
@@ -207,7 +209,7 @@ class AdministrationEmailSettingView(AbsGoogleOauthView):
         subject = email_send_test_form.cleaned_data["subject"]
         body_template = email_send_test_form.cleaned_data["body_template"]
 
-        body_template_params = dict(email=target)
+        body_template_params: Dict[str, str] = dict(email=target)
 
         # Send email
         try:

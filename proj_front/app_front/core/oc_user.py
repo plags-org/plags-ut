@@ -21,6 +21,13 @@ FACULTY_USER_DEFAULT_AUTHORITY_CHOICE: UserAuthorityCode = UserAuthorityEnum(
     UserAuthorityEnum.LECTURER
 ).value
 
+AVAILABLE_ORGANIZATION_FACULTY_USER_AUTHORITY_CHOICES = UserAuthorityEnum.as_choices(
+    UserAuthorityEnum.MANAGER,
+)
+ORGANIZATION_FACULTY_USER_DEFAULT_AUTHORITY_CHOICE: UserAuthorityCode = (
+    UserAuthorityEnum(UserAuthorityEnum.MANAGER).value
+)
+
 AVAILABLE_STUDENT_USER_AUTHORITY_CHOICES = UserAuthorityEnum.as_choices(
     UserAuthorityEnum.STUDENT,
     UserAuthorityEnum.ASSISTANT,

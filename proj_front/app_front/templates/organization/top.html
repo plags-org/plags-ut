@@ -47,7 +47,6 @@
 
     <li><a href={% url 'organization_user/add_faculty' o_name=organization.name %}>Invite Faculty User to Organization</a></li>
     <li><a href={% url 'organization_user/change_faculty' o_name=organization.name %}>Change Faculty User Authority in Organization</a></li>
-    {% comment %} <li><a href={% url 'organization_user/create' o_name=organization.name %}>Create and Invite Multiple Users</a></li> {% endcomment %}
     <li><a href={% url 'organization_user/kickout' o_name=organization.name %}>Kickout Multiple Users from Organization</a></li>
 </ul>
 {% endrestrict %}

@@ -184,7 +184,9 @@ _TPureViewFunc: TypeAlias = Callable[
 ]
 
 
-def check_and_notify_exception(view_func: _TPureViewFunc) -> _TPureViewFunc:
+def check_and_notify_exception(
+    view_func: _TPureViewFunc[_PPureViewFunc],
+) -> _TPureViewFunc[_PPureViewFunc]:
     """
     Decorator for views that may throw an exception.
     This intercepts an exception, notify it to slack, then throw it again to its caller.
@@ -224,7 +226,9 @@ def check_and_notify_exception(view_func: _TPureViewFunc) -> _TPureViewFunc:
     return _wrapped_view
 
 
-def annex_user_authority(view_func: _TPureViewFunc) -> _TViewFunc:
+def annex_user_authority(
+    view_func: _TPureViewFunc[_PPureViewFunc],
+) -> _TViewFunc[_PCheckUserAuthority]:
     """
     Decorator for views that add the user authority information to view function argument.
     This authority information is added just after `request` argument.
@@ -254,7 +258,7 @@ def check_user_capability(
         return any(
             check_user_capability(user_authority, cap) for cap in test_capability
         )
-    SLACK_NOTIFIER.critical(
+    SLACK_NOTIFIER.critical(  # type:ignore[unreachable]
         f"LogicalError: unregistered capability: {test_capability=!r} (fallback to False)",
         tracebacks=traceback.format_exc(),
     )
@@ -294,7 +298,7 @@ def check_user_authority(
     test_capability: Union[
         UserAuthorityCapabilityKeyT, Tuple[UserAuthorityCapabilityKeyT, ...]
     ],
-) -> Callable[[_TViewFunc], _TViewFunc]:
+) -> Callable[[_TViewFunc[_PCheckUserAuthority]], _TViewFunc[_PCheckUserAuthority]]:
     """
     Decorator for views that checks that the user have enough authority to do some action.
     If it is not enough, redirects to the log-in page.
@@ -304,7 +308,9 @@ def check_user_authority(
     Please keep in mind that this must be called after `annex_user_authority` defined above.
     """
 
-    def decorator(view_func: _TViewFunc) -> _TViewFunc:
+    def decorator(
+        view_func: _TViewFunc[_PCheckUserAuthority],
+    ) -> _TViewFunc[_PCheckUserAuthority]:
         @wraps(view_func)
         def _wrapped_view(
             request: HttpRequest,
@@ -920,11 +926,13 @@ def check_user_authority_without_args(
     ],
     *,
     require_active_account: bool = True,
-) -> Callable[[_TViewFunc], _TViewFunc]:
+) -> Callable[[_TViewFunc[_PCheckUserAuthority]], _TViewFunc[_PCheckUserAuthority]]:
     """`check_user_authority` の `annex_user_authority` なし版"""
 
 
-    def decorator(view_func: _TViewFunc) -> _TViewFunc:
+    def decorator(
+        view_func: _TViewFunc[_PCheckUserAuthority],
+    ) -> _TViewFunc[_PCheckUserAuthority]:
         @wraps(view_func)
         def _wrapped_view(
             request: HttpRequest, *args: DjangoRequestArg, **kwargs: DjangoRequestKwarg

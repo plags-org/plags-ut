@@ -68,14 +68,16 @@ class AccountsProfileView(AbsPlagsView):
         request: HttpRequest,
         user_authority: UserAuthorityDict,
         *,
-        form: UpdateUserInfoForm = None,
-        register_google_auth_user_form: RegisterGoogleAuthUserForm = None,
-        confirm_common_id_number_form: ConfirmCommonIdNumberForm = None,
-        new_user_info_form: GoogleAuthTransitoryNewUserInfoForm = None,
+        form: Optional[UpdateUserInfoForm] = None,
+        register_google_auth_user_form: Optional[RegisterGoogleAuthUserForm] = None,
+        confirm_common_id_number_form: Optional[ConfirmCommonIdNumberForm] = None,
+        new_user_info_form: Optional[GoogleAuthTransitoryNewUserInfoForm] = None,
     ) -> HttpResponse:
         request_user = get_request_user_safe(request)
         organization_users = OrganizationUser.objects.filter(user=request_user)
-        course_users = CourseUser.objects.filter(user=request_user)
+        course_users = CourseUser.objects.filter(
+            user=request_user, course__is_active=True
+        )
 
         is_faculty = user_authority["is_faculty"]
 

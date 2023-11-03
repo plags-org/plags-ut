@@ -159,8 +159,6 @@ URL_PATTERNS = [
     # organization + attribute
     path('add_faculty/o/<str:o_name>/organization_user/', OrganizationUserAddFacultyView.as_view(), name='organization_user/add_faculty'),
     path('change_faculty/o/<str:o_name>/organization_user/', OrganizationFacultyUserChangeView.as_view(), name='organization_user/change_faculty'),
-    # NOTE TransitoryUser の導入によって機能維持が困難になったので封印 もともと導線は潰してあった
-    path('create/o/<str:o_name>/organization_user/', view_not_available, name='organization_user/create'),
     path('kickout/o/<str:o_name>/organization_user/', OrganizationUserKickoutView.as_view(), name='organization_user/kickout'),
     # path('list/o/<str:o_name>/organization_user/', view_organization_user_list, name='organization_user/list'),
 
@@ -185,8 +183,6 @@ URL_PATTERNS = [
     path('add_faculty/o/<str:o_name>/c/<str:c_name>/course_user/', CourseFacultyUserAddView.as_view(), name='course_user/add_faculty'),
     path('change_faculty/o/<str:o_name>/c/<str:c_name>/course_user/', CourseFacultyUserChangeView.as_view(), name='course_user/change_faculty'),
     path('change_student/o/<str:o_name>/c/<str:c_name>/course_user/', CourseStudentUserChangeView.as_view(), name='course_user/change_student'),
-    # NOTE TransitoryUser の導入によって機能維持が困難になったので封印 もともと導線は潰してあった
-    path('create/o/<str:o_name>/c/<str:c_name>/course_user/', view_not_available, name='course_user/create'),
     path('kickout/o/<str:o_name>/c/<str:c_name>/course_user/', CourseUserKickoutView.as_view(), name='course_user/kickout'),
     path('manage/o/<str:o_name>/c/<str:c_name>/course_user/', CourseUserManageView.as_view(), name='course_user/manage'),
     path('lms_diff/o/<str:o_name>/c/<str:c_name>/course_user/', CourseUserLMSDiffView.as_view(), name='course_user/lms_diff'),

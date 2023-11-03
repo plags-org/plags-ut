@@ -63,8 +63,10 @@ class LoginGoogleAuthView(AbsGoogleOauthView):
         # cf. <https://developers.google.com/identity/protocols/oauth2/openid-connect>
         google_id_info_sub = google_id_info["sub"]
         google_id_info_email: str = google_id_info["email"]
+        # NOTE name is not always available, but we require it because we use it as initial full_name
         google_id_info_name: str = google_id_info["name"]
-        google_id_info_picture: str = google_id_info["picture"]
+        # KNOWLEDGE picture is not always available
+        google_id_info_picture: Optional[str] = google_id_info.get("picture")
 
         # for DEBUG
         # print(f"{google_id_info=}")

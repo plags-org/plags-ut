@@ -1699,6 +1699,7 @@ class EmailHistory(Model):
     content_html = TextField(max_length=65535, null=True)
     sent_at = DateTimeField(auto_now_add=True)
 
+    smtp_successful = BooleanField(default=True)
     smtp_traceback = TextField(max_length=65535, null=True)
 
 

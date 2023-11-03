@@ -3,13 +3,15 @@
 import dataclasses
 import datetime
 import enum
+import logging
 import re
 import traceback
-from typing import Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 import pytz
 from django.conf import settings
 from django.urls import reverse
+from typing_extensions import TypeAlias
 
 from app_front.config.config import APP_CONFIG
 from app_front.config.config_model import (
@@ -170,6 +172,9 @@ DEFAULT_CONFIRM_COMMON_ID_NUMBER_EMAIL_BODY__TEXT_HTML = """\
 
 
 
+_RenderParams: TypeAlias = Dict[str, str]
+
+
 @dataclasses.dataclass
 class PlagsEmailData:
     sending_email: SendingEmail
@@ -267,7 +272,7 @@ def get_plain_from_html(content_html: str) -> str:
 
 
 def render_email_body(
-    email_body_template: str, params: dict, /, *, mode: RenderEmailMode
+    email_body_template: str, params: _RenderParams, /, *, mode: RenderEmailMode
 ) -> str:
     if mode == RenderEmailMode.TEXT_PLAIN:
         content_plain = get_plain_from_html(email_body_template)
@@ -377,7 +382,7 @@ def _send_plags_email_impl(
     try:
         send_email(email.sending_email, config=email.sender_config)
     except Exception:  # pylint: disable=broad-except
-        traceback.print_exc()
+        logging.exception("Failed to send email")
         smtp_traceback = traceback.format_exc()[:65535]
         message = (
             f"On: {__file__}\n"
@@ -388,6 +393,7 @@ def _send_plags_email_impl(
         # raise
     finally:
         if not (success := smtp_traceback is None):
+            email_history.smtp_successful = False
             email_history.smtp_traceback = smtp_traceback
             email_history.save()
             email_history.refresh_from_db()
@@ -514,7 +520,7 @@ def send_email_update_email(
 
     email_update_url = protocol_domain + reverse("update_email")
 
-    params = dict(
+    params: _RenderParams = dict(
         email=to_user.email_updating_to,
         email_update_pin=to_user.email_update_pin,
         email_update_url=email_update_url,
@@ -552,7 +558,7 @@ def send_password_reset_email(
         "user/reset_password/confirm"
     )
 
-    params = dict(
+    params: _RenderParams = dict(
         email=to_user.email,
         password_reset_pin=to_user.password_reset_pin,
         password_reset_confirm_url=password_reset_confirm_url,
@@ -597,7 +603,7 @@ def send_common_id_number_verification_email(
         )
     to_user_email = to_user.build_email_from_common_id_number(maybe_common_id_number)
 
-    params = dict(
+    params: _RenderParams = dict(
         email=to_user_email,
         google_id_info_email=to_user.google_id_info_email,
         common_id_number=to_user.google_id_common_id_number_unverified,
@@ -632,7 +638,7 @@ def send_email_to_user(
     to_user: User,
     /,
     *,
-    body_template_params: dict = None,
+    body_template_params: Optional[_RenderParams] = None,
     resend: bool = False,
 ) -> PlagsEmailSendResult:
     if resend:
@@ -667,7 +673,7 @@ def send_email_to_address(
     to_address: str,
     /,
     *,
-    body_template_params: dict = None,
+    body_template_params: Optional[_RenderParams] = None,
     resend: bool = False,
 ) -> PlagsEmailSendResult:
     if resend:

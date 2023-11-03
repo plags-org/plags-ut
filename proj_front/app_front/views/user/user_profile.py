@@ -43,7 +43,7 @@ class UserProfileView(AbsPlagsView):
         form: Optional[UpdateUserInfoByManagerForm] = None,
     ) -> HttpResponse:
         organization_users = OrganizationUser.objects.filter(user=user)
-        course_users = CourseUser.objects.filter(user=user)
+        course_users = CourseUser.objects.filter(user=user, course__is_active=True)
 
         if form is None:
             context = RequestContext.from_legacy(request, user_authority)

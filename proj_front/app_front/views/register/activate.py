@@ -1,3 +1,5 @@
+from typing import Optional
+
 from django.contrib.auth import authenticate, login
 from django.http.request import HttpRequest
 from django.http.response import HttpResponse
@@ -15,7 +17,7 @@ from app_front.forms import RegisterActivateForm
 class RegisterActivateView(AbsPlagsView):
     @classmethod
     def _view(
-        cls, request: HttpRequest, *, form: RegisterActivateForm = None
+        cls, request: HttpRequest, *, form: Optional[RegisterActivateForm] = None
     ) -> HttpResponse:
         if form is None:
             form = RegisterActivateForm()

@@ -482,7 +482,7 @@ class RegisterActivateForm(Form):
             )
         return password2
 
-    def clean(self) -> Dict[str, Any]:
+    def clean(self) -> Optional[Dict[str, Any]]:
         # フィールド単位のバリデーションで失敗しているのでフィールドを跨いだバリデーションは実行不能、スキップ
         if "email" not in self.cleaned_data:
             return super().clean()

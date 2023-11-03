@@ -425,7 +425,7 @@ def get_exercise_info_published(organization: Organization, exercise: Exercise):
 
 
 def generate_activation_pin() -> str:
-    return "_".join(f"{x:04x}" for x in random.randint(0, 65535) for _ in range(5))
+    return "_".join(f"{random.randint(0, 65535):04x}" for _ in range(5))
 
 
 def generate_verification_token() -> str:

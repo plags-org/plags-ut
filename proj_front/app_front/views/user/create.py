@@ -168,12 +168,17 @@ class UserCreateView(AbsPlagsView):
         )
 
         protocol_domain = f"{request.scheme}://{request.get_host()}"
-        send_activation_email(
+        email_result = send_activation_email(
             created_transitory_user,
             protocol_domain,
             expires_at=expired_at,
             expiration_period=f" (in {ActivationPinExpirePeriodEnum(activation_pin_expire_period).label})",
         )
+        if not email_result.success:
+            messages.error(
+                request, "Failed to send email. Please contact to administrator."
+            )
+            return cls._view(request, user_authority, organization, form=form)
 
         # 操作ログを記録
         operation_role = OperationLog.OperationRole.ADMINISTRATOR

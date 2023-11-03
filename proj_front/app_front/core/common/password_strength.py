@@ -1,8 +1,12 @@
+import contextlib
 from typing import Optional
 
 import Levenshtein
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
+from pydantic import EmailStr
+from pydantic import ValidationError as _PydanticValidationError
+from pydantic import parse_obj_as
 
 
 def _is_similar_string(a: str, b: str, min_distance_to_allow: int) -> bool:
@@ -33,7 +37,7 @@ def validate_password(
 ) -> None:
     """
     パスワードに関してはより強固な規則が必要
-    - ユーザー名と近いパスワードは許さない
+    - メールアドレスやユーザー名と近いパスワードは許さない
     - 以前のパスワードと近いパスワードは許さない（この部分では考慮しなくて良い）
     - `pin` と近いパスワードは許さない
     """
@@ -43,8 +47,12 @@ def validate_password(
     min_password_username_distance_to_allow = 4
     min_password_student_card_number_distance_to_allow = 4
 
-    email_local = email.split("@", maxsplit=1)[0]
+    if _is_similar_to_password(password, email, min_password_email_distance_to_allow):
+        raise ValidationError(
+            _("Requested password is too similar to your email address.")
+        )
 
+    email_local = email.split("@", maxsplit=1)[0]
     if _is_similar_to_password(
         password, email_local, min_password_email_distance_to_allow
     ):
@@ -52,11 +60,10 @@ def validate_password(
             _("Requested password is too similar to your email address.")
         )
 
-    if pin is not None:
-        if _is_similar_to_password(password, pin, min_password_pin_distance_to_allow):
-            raise ValidationError(
-                _("Requested password is too similar to current PIN.")
-            )
+    if pin is not None and _is_similar_to_password(
+        password, pin, min_password_pin_distance_to_allow
+    ):
+        raise ValidationError(_("Requested password is too similar to current PIN."))
 
     if _is_similar_to_password(
         password, username, min_password_username_distance_to_allow
@@ -71,3 +78,11 @@ def validate_password(
         raise ValidationError(
             _("Requested password is too similar to your student card number.")
         )
+
+    # password は email-address としての validation を通ってはいけない
+    with contextlib.suppress(_PydanticValidationError):
+        if parse_obj_as(EmailStr, password):
+            raise ValidationError(_("Cannot use email address as password."))
+
+    # KNOWLEDGE 共通 ID のようなものは Django により弾かれる
+    # > This password is entirely numeric.

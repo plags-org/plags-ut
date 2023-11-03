@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, Optional
 
 from django.contrib import messages
 from django.http.request import HttpRequest
@@ -6,8 +6,8 @@ from django.http.response import HttpResponse
 from django.shortcuts import redirect, render
 
 from app_front.core.oc_user import (
-    AVAILABLE_FACULTY_USER_AUTHORITY_CHOICES,
-    FACULTY_USER_DEFAULT_AUTHORITY_CHOICE,
+    AVAILABLE_ORGANIZATION_FACULTY_USER_AUTHORITY_CHOICES,
+    ORGANIZATION_FACULTY_USER_DEFAULT_AUTHORITY_CHOICE,
     UserAuthorityCode,
     get_oc_user_choices,
     get_sorted_organization_users,
@@ -30,9 +30,11 @@ class OrganizationFacultyUserChangeView(AbsPlagsView):
     MANIPULATE_DESCRIPTION: str = "Change authority of user in"
 
     USER_AUTHORITY_CHOICES: DjangoChoiceFieldChoices = (
-        AVAILABLE_FACULTY_USER_AUTHORITY_CHOICES
+        AVAILABLE_ORGANIZATION_FACULTY_USER_AUTHORITY_CHOICES
     )
-    USER_DEFAULT_AUTHORITY: UserAuthorityCode = FACULTY_USER_DEFAULT_AUTHORITY_CHOICE
+    USER_DEFAULT_AUTHORITY: UserAuthorityCode = (
+        ORGANIZATION_FACULTY_USER_DEFAULT_AUTHORITY_CHOICE
+    )
 
     @classmethod
     def _view(
@@ -41,7 +43,7 @@ class OrganizationFacultyUserChangeView(AbsPlagsView):
         user_authority: UserAuthorityDict,
         organization: Organization,
         organization_users: Iterable[OrganizationUser],
-        form: MetaOCChangeUserForm = None,
+        form: Optional[MetaOCChangeUserForm] = None,
     ) -> HttpResponse:
         if form is None:
             user_choices = get_oc_user_choices(organization_users)

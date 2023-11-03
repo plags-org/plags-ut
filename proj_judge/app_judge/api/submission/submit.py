@@ -81,8 +81,8 @@ def _post(request: HttpRequest, *_args: Any, **_kwargs: Any) -> JsonResponse:
 
 
 @csrf_exempt
-def api_submission_submit(
-    request: HttpRequest, *args: Any, **kwargs: Any  # type:ignore[misc]
+def api_submission_submit(  # type:ignore[misc]
+    request: HttpRequest, *args: Any, **kwargs: Any
 ) -> JsonResponse:
     if request.method == "POST":
         return _post(request, *args, **kwargs)

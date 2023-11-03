@@ -70,7 +70,9 @@ class UserResetPasswordFormView(AbsPlagsView):
                 user.save()
 
                 protocol_domain = f"{request.scheme}://{request.get_host()}"
-                send_password_reset_email(user, protocol_domain)
+                email_result = send_password_reset_email(user, protocol_domain)
+                if not email_result.success:
+                    raise SystemResponsibleException("Failed to send email")
 
             except UserResponsibleException:
                 # NOTE 失敗しても区別なく見せるために管理者に警告だけ出して握りつぶす

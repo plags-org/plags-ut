@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, Optional
 
 from django.contrib import messages
 from django.http.request import HttpRequest
@@ -6,8 +6,8 @@ from django.http.response import HttpResponse
 from django.shortcuts import redirect, render
 
 from app_front.core.oc_user import (
-    AVAILABLE_FACULTY_USER_AUTHORITY_CHOICES,
-    FACULTY_USER_DEFAULT_AUTHORITY_CHOICE,
+    AVAILABLE_ORGANIZATION_FACULTY_USER_AUTHORITY_CHOICES,
+    ORGANIZATION_FACULTY_USER_DEFAULT_AUTHORITY_CHOICE,
     get_non_oc_faculty_choices,
     get_sorted_organization_users,
 )
@@ -35,14 +35,16 @@ class OrganizationUserAddFacultyView(AbsPlagsView):
         user_authority: UserAuthorityDict,
         organization: Organization,
         organization_users: Iterable[OrganizationUser],
-        form: MetaOCAddUserForm = None,
+        form: Optional[MetaOCAddUserForm] = None,
     ) -> HttpResponse:
         if form is None:
             user_choices = get_non_oc_faculty_choices(organization_users)
             form = MetaOCAddUserForm(
                 user_choices,
-                user_authority_choices=AVAILABLE_FACULTY_USER_AUTHORITY_CHOICES,
-                initial=dict(user_authority=FACULTY_USER_DEFAULT_AUTHORITY_CHOICE),
+                user_authority_choices=AVAILABLE_ORGANIZATION_FACULTY_USER_AUTHORITY_CHOICES,
+                initial=dict(
+                    user_authority=ORGANIZATION_FACULTY_USER_DEFAULT_AUTHORITY_CHOICE
+                ),
             )
 
         return render(

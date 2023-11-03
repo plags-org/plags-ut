@@ -14,7 +14,7 @@ from app_front.core.plags_utils.plags_endpoint import (
     annotate_view_endpoint,
 )
 from app_front.forms import AdministrationSendMailBulkForm
-from app_front.models import CourseUser, OrganizationUser, User
+from app_front.models import User
 from app_front.utils.auth_util import UserAuthorityCapabilityKeys, UserAuthorityDict
 from app_front.utils.email_util import send_email_to_address, send_email_to_user
 
@@ -51,9 +51,6 @@ class AdministrationSendMailBulkView(AbsPlagsView):
         *,
         form: Optional[AdministrationSendMailBulkForm] = None,
     ) -> HttpResponse:
-        organization_users = OrganizationUser.objects.filter(user=request.user)
-        course_users = CourseUser.objects.filter(user=request.user)
-
         if form is None:
             form = AdministrationSendMailBulkForm()
 
@@ -62,9 +59,6 @@ class AdministrationSendMailBulkView(AbsPlagsView):
             "administration/send_mail_bulk.html",
             dict(
                 user_authority=user_authority,
-                organization_users=organization_users,
-                course_users=course_users,
-                target_user=request.user,
                 form=form,
             ),
         )
@@ -104,14 +98,16 @@ class AdministrationSendMailBulkView(AbsPlagsView):
             time.sleep(3)
             try:
                 if isinstance(target, User):
-                    body_template_params = dict(email=target.email)
-                    send_email_to_user(
+                    body_template_params: Dict[str, str] = dict(email=target.email)
+                    email_result = send_email_to_user(
                         _SEND_MAIL_BULK_OBJECTIVE,
                         subject,
                         body_template,
                         target,
                         body_template_params=body_template_params,
                     )
+                    if not email_result.success:
+                        raise ValueError(f"Failed to send email to user: {target!r}")
                 elif isinstance(target, _EmailAddress):
                     body_template_params = dict(email=target)
                     send_email_to_address(
@@ -121,6 +117,8 @@ class AdministrationSendMailBulkView(AbsPlagsView):
                         target,
                         body_template_params=body_template_params,
                     )
+                    if not email_result.success:
+                        raise ValueError(f"Failed to send email to address: {target!r}")
                 else:
                     raise ValueError(f"Invalid target: {target!r}")
             except Exception as exc:  # pylint: disable=broad-except
